@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>三菱UFJ銀行 入出金明細 テンプレート</title>
+  <style>
+    :root {
+      --red: #e60012;
+      --border: #bdbdbd;
+      --info-bg: #e6e6e6;
+      --thead-bg: #d9d9d9;
+      --text: #111;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background: #d8d8d8;
+      font-size: 12px;
+    }
+
+    .font-w6 {
+      font-family: "Hiragino Kaku Gothic Pro", "Hiragino Kaku Gothic ProN", "HiraKakuPro-W6", "Yu Gothic", "Meiryo", sans-serif;
+      font-weight: 600;
+    }
+
+    .font-w3 {
+      font-family: "Hiragino Kaku Gothic Pro", "Hiragino Kaku Gothic ProN", "HiraKakuPro-W3", "Yu Gothic", "Meiryo", sans-serif;
+      font-weight: 300;
+    }
+
+    .font-amount {
+      font-family: "Hiragino Kaku Gothic Pro", "Hiragino Kaku Gothic ProN", "HiraKakuPro-W6", "Yu Gothic", "Meiryo", sans-serif;
+      font-weight: 600;
+      font-size: 9.6pt;
+    }
+
+    .font-footer-url {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF UI Text", ".SFUI-Regular", "Segoe UI", sans-serif;
+      font-weight: 400;
+      font-size: 7pt;
+      letter-spacing: 0;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      min-height: 100vh;
+    }
+
+    .panel {
+      background: #fff;
+      border-right: 1px solid #ccc;
+      padding: 14px;
+      overflow-y: auto;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+
+    .panel h1 { font-size: 15px; margin: 0 0 8px; }
+    .panel .hint { font-size: 11px; color: #666; margin: 0 0 14px; line-height: 1.5; }
+
+    .group { margin-bottom: 10px; }
+    .group label { display: block; font-size: 11px; font-weight: 700; margin-bottom: 3px; }
+    .group input, .group select {
+      width: 100%;
+      padding: 6px 8px;
+      border: 1px solid #bbb;
+      border-radius: 3px;
+      font: inherit;
+      font-size: 12px;
+    }
+
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid #eee;
+    }
+
+    button {
+      border: 1px solid #aaa;
+      background: #fff;
+      padding: 7px 10px;
+      border-radius: 3px;
+      cursor: pointer;
+      font: inherit;
+      font-size: 12px;
+    }
+
+    button.primary { background: var(--red); color: #fff; border-color: var(--red); }
+
+    .preview-wrap {
+      padding: 20px;
+      overflow: auto;
+      background: #d8d8d8;
+    }
+
+    /* ===== 原版式 ===== */
+    .sheet {
+      width: 190mm;
+      min-height: 277mm;
+      margin: 0 auto 20px;
+      background: #fff;
+      box-shadow: 0 1px 8px rgba(0,0,0,.15);
+      padding: 7mm 6.5mm 12mm;
+      position: relative;
+      color: #111;
+    }
+
+    .doc-top { margin-bottom: 6px; }
+
+    .brand-img {
+      display: block;
+      height: 26px;
+      width: auto;
+      margin-bottom: 4px;
+    }
+
+    .top-rule {
+      border: 0;
+      border-top: 1px solid #c8c8c8;
+      margin: 0 0 7px;
+    }
+
+    .info-card {
+      background: #ececec;
+      border-radius: 7px;
+      padding: 7px 10px 8px;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: 10.6em minmax(0, 1fr) auto;
+      column-gap: 0;
+      row-gap: 1px;
+      align-items: center;
+      font-size: 10.5px;
+      line-height: 1.45;
+    }
+
+    .info-grid .lbl {
+      white-space: nowrap;
+      padding-right: 6px;
+    }
+
+    .info-grid .val {
+      min-width: 0;
+    }
+
+    .bank-block {
+      grid-column: 3;
+      grid-row: 1 / 3;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding-left: 12px;
+      align-self: start;
+    }
+
+    .bank-lbl {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.35;
+      white-space: nowrap;
+    }
+
+    .bank-lbl-sub {
+      display: block;
+    }
+
+    .bank-val {
+      padding-top: 1px;
+      white-space: nowrap;
+    }
+
+    .status-line {
+      font-size: 10.5px;
+      margin: 5px 0 6px;
+      padding-left: 1px;
+      letter-spacing: 0.01em;
+    }
+
+    .tx-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 10px;
+      line-height: 1.25;
+    }
+
+    .tx-table th,
+    .tx-table td {
+      border: 1px solid var(--border);
+      padding: 2px 3px;
+      vertical-align: top;
+      font-weight: 400;
+    }
+
+    .tx-table th {
+      background: var(--thead-bg);
+      text-align: center;
+      font-size: 10px;
+      padding: 3px 2px;
+      font-weight: 600;
+    }
+
+    .tx-table td { font-weight: 300; }
+
+    .tx-table .col-date { width: 11%; }
+    .tx-table .col-pay { width: 10%; }
+    .tx-table .col-dep { width: 10%; }
+    .tx-table .col-desc { width: 38%; }
+    .tx-table .col-bal { width: 12%; }
+    .tx-table .col-memo { width: 19%; }
+
+    .tx-table .num {
+      text-align: right;
+      white-space: nowrap;
+      padding-right: 4px;
+    }
+
+    .tx-table td.num {
+      font-family: "Hiragino Kaku Gothic Pro", "Hiragino Kaku Gothic ProN", "HiraKakuPro-W6", "Yu Gothic", "Meiryo", sans-serif;
+      font-weight: 600;
+      font-size: 9.6pt;
+    }
+
+    .tx-table .col-desc { padding-left: 4px; }
+
+    .date-cell .date-y { display: block; }
+    .date-cell .date-md { display: block; padding-left: 1.2em; }
+
+    .footer {
+      position: absolute;
+      left: 7mm;
+      right: 7mm;
+      bottom: 5mm;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      color: #333;
+    }
+
+    .footer-meta {
+      text-align: right;
+      line-height: 1.3;
+    }
+
+    .footer-page {
+      display: block;
+    }
+
+    .doc-bottom {
+      margin-top: 8px;
+      padding-bottom: 14mm;
+    }
+
+    .text-96 {
+      font-size: 9.6pt;
+    }
+
+    .summary-card {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      align-items: center;
+      background: linear-gradient(180deg, #f3f3f3 0%, #e7e7e7 100%);
+      border-radius: 8px;
+      padding: 8px 14px;
+      min-height: 36px;
+      line-height: 1;
+    }
+
+    .summary-left {
+      justify-self: start;
+      white-space: nowrap;
+    }
+
+    .summary-center {
+      justify-self: center;
+      white-space: nowrap;
+      text-align: center;
+    }
+
+    .summary-amount {
+      justify-self: end;
+      white-space: nowrap;
+      text-align: right;
+      line-height: 1;
+      letter-spacing: 0.02em;
+    }
+
+    .legal {
+      margin-top: 7px;
+      color: #222;
+      font-size: 9.6pt;
+      line-height: 1;
+    }
+
+    .copyright-bar {
+      margin: 8px -6.5mm 0;
+      background: #d2d2d2;
+      text-align: center;
+      padding: 4px 8px;
+      font-size: 9px;
+      color: #222;
+      line-height: 1.3;
+    }
+
+    .tx-editor {
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      padding: 8px;
+      margin-bottom: 8px;
+      background: #fafafa;
+    }
+
+    .tx-editor .row-2, .tx-editor .row-3 { margin-bottom: 5px; }
+    .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; }
+    .tx-editor .mini-label { font-size: 10px; color: #666; margin-bottom: 2px; }
+    .tx-editor input {
+      width: 100%;
+      padding: 5px 6px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      font-size: 11px;
+    }
+    .tx-editor .tx-actions { display: flex; justify-content: flex-end; gap: 4px; margin-top: 4px; }
+    .tx-editor button { padding: 3px 7px; font-size: 11px; }
+
+    @media (max-width: 1050px) {
+      .app { grid-template-columns: 1fr; }
+      .panel { position: static; height: auto; }
+    }
+
+    @media print {
+      body { background: #fff; }
+      .panel { display: none !important; }
+      .preview-wrap { padding: 0; background: #fff; }
+      .sheet {
+        box-shadow: none;
+        margin: 0;
+        width: auto;
+        min-height: auto;
+        page-break-after: always;
+      }
+      .sheet:last-child { page-break-after: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="panel">
+      <h1>入出金明細 編集</h1>
+      <p class="hint">左で編集、右で原版式プレビュー。第2页以降は明細のみ表示（原版と同じ）。</p>
+
+      <div class="group"><label>お名前（カナ）</label><input id="f-name" type="text" value="ヤマダ　タロウ　様" /></div>
+      <div class="row-2 group">
+        <div><label>店番</label><input id="f-branch-no" type="text" value="481" /></div>
+        <div><label>店名</label><input id="f-branch-name" type="text" value="○○支店" /></div>
+      </div>
+      <div class="row-2 group">
+        <div>
+          <label>科目</label>
+          <select id="f-account-type"><option>普通</option><option>当座</option></select>
+        </div>
+        <div><label>口座番号</label><input id="f-account-no" type="text" value="1234567" /></div>
+      </div>
+      <div class="row-2 group">
+        <div><label>照会開始日</label><input id="f-period-start" type="date" value="2023-12-01" /></div>
+        <div><label>照会終了日</label><input id="f-period-end" type="date" value="2024-04-01" /></div>
+      </div>
+      <div class="group"><label>絞り込み</label><input id="f-filter" type="text" value="全取引" /></div>
+      <div class="row-2 group">
+        <div><label>Eco通帳申込日</label><input id="f-eco-date" type="date" value="2023-11-07" /></div>
+        <div><label>銀行コード</label><input id="f-bank-code" type="text" value="0005" /></div>
+      </div>
+      <div class="row-2 group">
+        <div><label>表示日</label><input id="f-now-date" type="date" /></div>
+        <div><label>表示時刻</label><input id="f-now-time" type="time" value="12:20" /></div>
+      </div>
+      <div class="row-2 group">
+        <div><label>印刷日</label><input id="f-print-date" type="date" /></div>
+        <div><label>印刷時刻</label><input id="f-print-time" type="time" value="12:21" /></div>
+      </div>
+      <div class="row-2 group">
+        <div><label>页码（留空=自动）</label><input id="f-page-num" type="number" min="1" placeholder="如 4" /></div>
+        <div><label>总页数（留空=自动）</label><input id="f-page-total" type="number" min="1" placeholder="如 5" /></div>
+      </div>
+      <div class="group"><label>フッター URL</label><input id="f-url" type="text" value="https://direct11.bk.mufg.jp/ib/dfw/APL/bnkib/banking" /></div>
+      <div class="group"><label>お預り金額合計</label><input id="f-total-deposit" type="text" value="6026" /></div>
+      <div class="group"><label>Copyright 年份</label><input id="f-copyright-year" type="text" value="2024" /></div>
+      <div class="group"><label>1ページ行数（第1页）</label><input id="f-rows-per-page" type="number" min="8" max="20" value="14" /></div>
+
+      <h2 style="font-size:13px;margin:14px 0 6px;">取引明細</h2>
+      <div id="tx-list"></div>
+      <button type="button" id="btn-add-row">+ 行追加</button>
+
+      <div class="actions">
+        <button class="primary" id="btn-print">印刷 / PDF保存</button>
+        <button id="btn-save">保存</button>
+        <button id="btn-load">読込</button>
+        <button id="btn-reset">リセット</button>
+      </div>
+    </aside>
+
+    <main class="preview-wrap" id="preview"></main>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "mufg-statement-template-v3";
+
+
+    const defaultRows = [
+      { date:"2023-12-06", pay:"", dep:"210000", desc:"カ－ド", bal:"211000", memo:"" },
+      { date:"2023-12-06", pay:"", dep:"22000", desc:"カ－ド", bal:"233000", memo:"" },
+      { date:"2023-12-06", pay:"3000", dep:"", desc:"カ－ド", bal:"230000", memo:"" },
+      { date:"2023-12-11", pay:"210000", dep:"", desc:"カ－ド", bal:"20000", memo:"" },
+      { date:"2023-12-13", pay:"5000", dep:"", desc:"カ－ド", bal:"15000", memo:"" },
+      { date:"2023-12-18", pay:"12000", dep:"", desc:"カ－ド", bal:"3000", memo:"" },
+      { date:"2024-01-02", pay:"2000", dep:"", desc:"カードＣ１", bal:"1000", memo:"" },
+      { date:"2024-01-02", pay:"", dep:"5000", desc:"振込１　ヤマダ　ハナコ", bal:"6000", memo:"" },
+      { date:"2024-01-02", pay:"5000", dep:"", desc:"カードＣ１", bal:"1000", memo:"" },
+      { date:"2024-01-02", pay:"330", dep:"", desc:"手数料", bal:"670", memo:"" },
+      { date:"2024-01-04", pay:"", dep:"10000", desc:"カ－ド", bal:"10670", memo:"" },
+      { date:"2024-01-07", pay:"5000", dep:"", desc:"カ－ド", bal:"5670", memo:"" },
+      { date:"2024-01-28", pay:"3920", dep:"", desc:"振込ＩＢ２　サトウ　イチロウ", bal:"1750", memo:"" },
+      { date:"2024-01-28", pay:"730", dep:"", desc:"マツヤ", bal:"1020", memo:"" },
+      { date:"2024-01-30", pay:"", dep:"3000", desc:"カ－ド", bal:"4020", memo:"" },
+      { date:"2024-01-31", pay:"425", dep:"", desc:"デビット１　２９９９４７　イオングル－フ", bal:"3595", memo:"" },
+      { date:"2024-02-04", pay:"490", dep:"", desc:"デビット１　５１８３６３　ムジルシリヨウ", bal:"3105", memo:"" },
+      { date:"2024-02-05", pay:"", dep:"30000", desc:"振込１　スズキ　ジロウ", bal:"33105", memo:"" },
+    ];
+
+    let rows = structuredClone(defaultRows);
+    const fields = [
+      "f-name","f-branch-no","f-branch-name","f-account-type","f-account-no",
+      "f-period-start","f-period-end","f-filter","f-eco-date","f-bank-code","f-now-date",
+      "f-now-time","f-print-date","f-print-time","f-page-num","f-page-total",
+      "f-url","f-total-deposit",
+      "f-copyright-year","f-rows-per-page"
+    ];
+
+    const todayISO = () => {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    };
+
+    const formatJPDate = (iso) => {
+      if (!iso) return "";
+      const [y,m,d] = iso.split("-").map(Number);
+      return `${y}年${m}月${d}日`;
+    };
+
+    const formatJPDateLines = (iso) => {
+      if (!iso) return { y:"", md:"" };
+      const [y,m,d] = iso.split("-").map(Number);
+      return { y:`${y}年`, md:`${m}月${d}日` };
+    };
+
+    const formatYen = (value) => {
+      if (value === null || value === undefined || String(value).trim() === "") return "";
+      const num = Number(String(value).replace(/,/g, ""));
+      if (Number.isNaN(num)) return String(value);
+      return `${num.toLocaleString("ja-JP")}円`;
+    };
+
+    const getFormData = () => {
+      const data = {};
+      fields.forEach(id => data[id] = document.getElementById(id).value);
+      data.rows = structuredClone(rows);
+      return data;
+    };
+
+    const setFormData = (data) => {
+      fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (data[id] !== undefined) el.value = data[id];
+      });
+      rows = structuredClone(data.rows || defaultRows);
+    };
+
+    const chunk = (arr, size) => {
+      const out = [];
+      for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+      return out.length ? out : [[]];
+    };
+
+    const renderHeader = (d) => {
+      const nowDate = formatJPDate(d["f-now-date"]);
+      const nowTime = (d["f-now-time"] || "12:20").slice(0,5).replace(":","時") + "分";
+      return `
+        <div class="doc-top font-w3">
+          <img class="brand-img" src="assets/mufg-header.png" alt="MUFG 三菱UFJ銀行" />
+          <hr class="top-rule" />
+          <div class="info-card">
+            <div class="info-grid">
+              <div class="lbl font-w6">お名前（カナ）</div>
+              <div class="val font-w3">${d["f-name"]}</div>
+              <div class="bank-block">
+                <div class="bank-lbl font-w6">
+                  <span>金融機関コード</span>
+                  <span class="bank-lbl-sub">（銀行コード）</span>
+                </div>
+                <div class="bank-val font-w3">${d["f-bank-code"] || "0005"}</div>
+              </div>
+
+              <div class="lbl font-w6">店番／店名</div>
+              <div class="val font-w3">店番${d["f-branch-no"]}　${d["f-branch-name"]}</div>
+
+              <div class="lbl font-w6">科目／口座番号</div>
+              <div class="val font-w3">${d["f-account-type"]} ${d["f-account-no"]}</div>
+
+              <div class="lbl font-w6">照会期間</div>
+              <div class="val font-w3">${formatJPDate(d["f-period-start"])}～${formatJPDate(d["f-period-end"])}</div>
+
+              <div class="lbl font-w6">絞り込み</div>
+              <div class="val font-w3">${d["f-filter"]}</div>
+
+              <div class="lbl font-w6">Eco通帳申込日</div>
+              <div class="val font-w3">${formatJPDate(d["f-eco-date"])}</div>
+            </div>
+          </div>
+          <div class="status-line font-w3">Eco通帳（インターネット通帳）${nowDate} ${nowTime}現在</div>
+        </div>
+      `;
+    };
+
+    const renderBottom = (d) => {
+      const year = d["f-copyright-year"] || "2024";
+      return `
+        <div class="doc-bottom">
+          <div class="summary-card">
+            <div class="summary-left font-w6 text-96">${d["f-branch-name"]}　${d["f-account-type"]} ${d["f-account-no"]}</div>
+            <div class="summary-center font-w6 text-96">お預り金額合計：</div>
+            <div class="summary-amount font-amount text-96">${formatYen(d["f-total-deposit"])}</div>
+          </div>
+          <div class="legal font-w3 text-96">
+            通帳コピー（入出金明細）が必要な場合は、この画面を印刷してご利用ください。<br>
+            不要な部分はお手数ですが、黒塗りをお願いいたします。
+          </div>
+          <div class="copyright-bar font-w3">Copyright(c) ${year} MUFG Bank, Ltd. All rights reserved.</div>
+        </div>
+      `;
+    };
+
+    const renderTableHead = () => `
+      <thead class="font-w6"><tr>
+        <th class="col-date">日付</th>
+        <th class="col-pay">お支払い</th>
+        <th class="col-dep">お預かり</th>
+        <th class="col-desc">お取引内容</th>
+        <th class="col-bal">差引残高</th>
+        <th class="col-memo">メモ</th>
+      </tr></thead>
+    `;
+
+    const renderRows = (pageRows) => pageRows.map(row => {
+      const date = formatJPDateLines(row.date);
+      return `<tr>
+        <td class="col-date date-cell"><span class="date-y">${date.y}</span><span class="date-md">${date.md}</span></td>
+        <td class="col-pay num">${formatYen(row.pay)}</td>
+        <td class="col-dep num">${formatYen(row.dep)}</td>
+        <td class="col-desc">${row.desc || ""}</td>
+        <td class="col-bal num">${formatYen(row.bal)}</td>
+        <td class="col-memo">${row.memo || ""}</td>
+      </tr>`;
+    }).join("");
+
+    const renderTxEditors = () => {
+      const list = document.getElementById("tx-list");
+      list.innerHTML = rows.map((row, idx) => `
+        <div class="tx-editor" data-idx="${idx}">
+          <div class="row-2">
+            <div><div class="mini-label">日付</div><input type="date" data-key="date" value="${row.date||""}" /></div>
+            <div><div class="mini-label">差引残高</div><input type="text" data-key="bal" value="${row.bal||""}" /></div>
+          </div>
+          <div class="row-3">
+            <div><div class="mini-label">お支払い</div><input type="text" data-key="pay" value="${row.pay||""}" /></div>
+            <div><div class="mini-label">お預かり</div><input type="text" data-key="dep" value="${row.dep||""}" /></div>
+            <div><div class="mini-label">メモ</div><input type="text" data-key="memo" value="${row.memo||""}" /></div>
+          </div>
+          <div><div class="mini-label">お取引内容</div><input type="text" data-key="desc" value="${row.desc||""}" /></div>
+          <div class="tx-actions">
+            <button type="button" data-action="up">↑</button>
+            <button type="button" data-action="down">↓</button>
+            <button type="button" data-action="delete">削除</button>
+          </div>
+        </div>
+      `).join("");
+
+      list.querySelectorAll(".tx-editor").forEach(editor => {
+        const idx = Number(editor.dataset.idx);
+        editor.querySelectorAll("input").forEach(input => {
+          input.addEventListener("input", () => { rows[idx][input.dataset.key] = input.value; renderPreview(); });
+        });
+        editor.querySelectorAll("button").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const a = btn.dataset.action;
+            if (a === "delete") rows.splice(idx, 1);
+            if (a === "up" && idx > 0) [rows[idx-1], rows[idx]] = [rows[idx], rows[idx-1]];
+            if (a === "down" && idx < rows.length-1) [rows[idx+1], rows[idx]] = [rows[idx], rows[idx+1]];
+            renderTxEditors(); renderPreview();
+          });
+        });
+      });
+    };
+
+    const renderPreview = () => {
+      const d = getFormData();
+      const firstPageRows = Math.max(8, Number(d["f-rows-per-page"]) || 14);
+      const otherPageRows = 20;
+      const pages = [];
+      if (rows.length === 0) {
+        pages.push([]);
+      } else {
+        pages.push(rows.slice(0, firstPageRows));
+        let i = firstPageRows;
+        while (i < rows.length) {
+          pages.push(rows.slice(i, i + otherPageRows));
+          i += otherPageRows;
+        }
+      }
+
+      const printDate = (d["f-print-date"] || todayISO()).replaceAll("-", "/");
+      const printTime = (d["f-print-time"] || "12:21").slice(0,5);
+      const totalPages = pages.length;
+
+      document.getElementById("preview").innerHTML = pages.map((pageRows, pageIdx) => {
+        const isFirst = pageIdx === 0;
+        const isLast = pageIdx === totalPages - 1;
+        const header = isFirst ? renderHeader(d) : "";
+        const tableHead = isFirst ? renderTableHead() : "";
+        const summary = isLast ? renderBottom(d) : "";
+        const pageNum = d["f-page-num"] ? Number(d["f-page-num"]) : pageIdx + 1;
+        const pageTotal = d["f-page-total"] ? Number(d["f-page-total"]) : totalPages;
+
+        return `<section class="sheet">
+          ${header}
+          <table class="tx-table font-w3">${tableHead}<tbody>${renderRows(pageRows)}</tbody></table>
+          ${summary}
+          <div class="footer">
+            <span class="footer-url font-footer-url">${d["f-url"]}</span>
+            <span class="footer-meta font-footer-url">
+              <span class="footer-time">${printTime} ${printDate}</span>
+              <span class="footer-page">Trang ${pageNum} / ${pageTotal}</span>
+            </span>
+          </div>
+        </section>`;
+      }).join("");
+    };
+
+    fields.forEach(id => {
+      document.getElementById(id).addEventListener("input", renderPreview);
+      document.getElementById(id).addEventListener("change", renderPreview);
+    });
+
+    document.getElementById("f-now-date").value = "2024-04-05";
+    document.getElementById("f-print-date").value = "2024-04-05";
+
+    document.getElementById("btn-add-row").addEventListener("click", () => {
+      rows.push({ date: todayISO(), pay:"", dep:"", desc:"", bal:"", memo:"" });
+      renderTxEditors(); renderPreview();
+    });
+    document.getElementById("btn-print").addEventListener("click", () => window.print());
+    document.getElementById("btn-save").addEventListener("click", () => {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(getFormData()));
+      alert("保存しました");
+    });
+    document.getElementById("btn-load").addEventListener("click", () => {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return alert("保存データがありません");
+      setFormData(JSON.parse(raw));
+      renderTxEditors(); renderPreview();
+      alert("読み込みました");
+    });
+    document.getElementById("btn-reset").addEventListener("click", () => {
+      if (!confirm("初期値に戻しますか？")) return;
+      rows = structuredClone(defaultRows);
+      fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el.tagName === "SELECT") el.selectedIndex = 0;
+        else el.value = el.defaultValue;
+      });
+      document.getElementById("f-now-date").value = "2024-04-05";
+      document.getElementById("f-print-date").value = "2024-04-05";
+      renderTxEditors(); renderPreview();
+    });
+
+    renderTxEditors();
+    renderPreview();
+  </script>
+</body>
+</html>
