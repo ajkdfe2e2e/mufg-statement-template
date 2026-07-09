@@ -6,6 +6,8 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>三菱UFJ銀行 入出金明細 テンプレート</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     :root {
       --red: #e60012;
@@ -760,14 +762,75 @@
     document.getElementById("f-now-date").value = "2024-03-05";
     document.getElementById("f-print-date").value = "2024-03-05";
 
+
+    const buildPdfFileName = () => {
+      const dateText = (document.getElementById("f-print-date")?.value || todayISO()).replaceAll("-", "");
+      return `mufg-statement-${dateText}.pdf`;
+    };
+
+    const downloadPreviewPdf = async () => {
+      const html2canvasInstance = window.html2canvas;
+      const jsPDFClass = window.jspdf && window.jspdf.jsPDF;
+      if (!html2canvasInstance || !jsPDFClass) {
+        throw new Error(currentPanelLang === "zh" ? "PDF 生成库尚未加载完成，请稍后再试" : "PDF生成ライブラリの読み込みが完了していません。少し待ってから再試行してください");
+      }
+
+      renderPreview();
+      if (document.fonts && document.fonts.ready) await document.fonts.ready;
+
+      const sheets = Array.from(document.querySelectorAll(".sheet"));
+      if (!sheets.length) {
+        throw new Error(currentPanelLang === "zh" ? "没有可导出的预览页面" : "書き出すプレビューページがありません");
+      }
+
+      const pdf = new jsPDFClass({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      for (const [sheetIndex, sheetElement] of sheets.entries()) {
+        if (sheetIndex > 0) pdf.addPage();
+        const originalBoxShadow = sheetElement.style.boxShadow;
+        const originalMargin = sheetElement.style.margin;
+        sheetElement.style.boxShadow = "none";
+        sheetElement.style.margin = "0";
+        const canvas = await html2canvasInstance(sheetElement, {
+          backgroundColor: "#ffffff",
+          scale: 2,
+          useCORS: true,
+          logging: false,
+        });
+        sheetElement.style.boxShadow = originalBoxShadow;
+        sheetElement.style.margin = originalMargin;
+
+        const imageData = canvas.toDataURL("image/jpeg", 0.98);
+        let imageWidth = pageWidth;
+        let imageHeight = canvas.height * imageWidth / canvas.width;
+        if (imageHeight > pageHeight) {
+          imageHeight = pageHeight;
+          imageWidth = canvas.width * imageHeight / canvas.height;
+        }
+        const imageLeft = (pageWidth - imageWidth) / 2;
+        pdf.addImage(imageData, "JPEG", imageLeft, 0, imageWidth, imageHeight);
+      }
+
+      pdf.save(buildPdfFileName());
+    };
+
     document.getElementById("btn-add-row").addEventListener("click", () => {
       rows.push({ date: todayISO(), pay:"", dep:"", desc:"", bal:"", memo:"" });
       renderTxEditors(); renderPreview();
     });
     document.getElementById("btn-print").addEventListener("click", () => window.print());
-    document.getElementById("btn-save-pdf").addEventListener("click", () => {
-      setSaveStatus(currentPanelLang === "zh" ? "请在打印窗口中选择 保存为 PDF" : "印刷画面で PDFに保存 を選択してください");
-      window.print();
+    document.getElementById("btn-save-pdf").addEventListener("click", async () => {
+      try {
+        setSaveStatus(currentPanelLang === "zh" ? "正在生成 PDF..." : "PDFを生成しています...");
+        await downloadPreviewPdf();
+        setSaveStatus(currentPanelLang === "zh" ? "PDF 已保存" : "PDFを保存しました");
+      } catch (error) {
+        const messagePrefix = currentPanelLang === "zh" ? "PDF保存失败：" : "PDF保存に失敗しました：";
+        setSaveStatus(messagePrefix + error.message, true);
+        alert(messagePrefix + error.message);
+      }
     });
     const setSaveStatus = (message, isError = false) => {
       const saveStatusElement = document.getElementById("save-status");
