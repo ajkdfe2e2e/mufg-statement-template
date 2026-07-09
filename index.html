@@ -2,6 +2,8 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>三菱UFJ銀行 入出金明細 テンプレート</title>
   <style>
@@ -75,6 +77,14 @@
       font-size: 12px;
     }
 
+    .group input.date-input,
+    .tx-editor input.date-input {
+      direction: ltr !important;
+      text-align: left !important;
+      unicode-bidi: plaintext;
+      font-variant-numeric: tabular-nums;
+    }
+
     .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
     .actions {
@@ -132,38 +142,45 @@
     }
 
     .info-card {
+      position: relative;
       background: #ececec;
       border-radius: 7px;
       padding: 7px 10px 8px;
+      min-height: 118px;
     }
 
-    .info-grid {
-      display: grid;
-      grid-template-columns: 10.6em minmax(0, 1fr) auto;
-      column-gap: 0;
-      row-gap: 1px;
-      align-items: center;
-      font-size: 10.5px;
-      line-height: 1.45;
+    .info-rows {
+      padding-right: 132px;
     }
 
-    .info-grid .lbl {
+    .info-row {
+      display: flex;
+      align-items: baseline;
+      line-height: 1.55;
+      min-height: 16px;
+      font-size: 9.6pt;
+    }
+
+    .info-row .lbl {
+      flex: 0 0 10.6em;
       white-space: nowrap;
-      padding-right: 6px;
+      padding-right: 4px;
     }
 
-    .info-grid .val {
+    .info-row .val {
+      flex: 1 1 auto;
       min-width: 0;
+      line-height: 1;
+      font-weight: 600;
     }
 
     .bank-block {
-      grid-column: 3;
-      grid-row: 1 / 3;
+      position: absolute;
+      top: 7px;
+      right: 10px;
       display: flex;
       align-items: flex-start;
-      gap: 10px;
-      padding-left: 12px;
-      align-self: start;
+      gap: 8px;
     }
 
     .bank-lbl {
@@ -171,6 +188,7 @@
       flex-direction: column;
       line-height: 1.35;
       white-space: nowrap;
+      font-size: 9.6pt;
     }
 
     .bank-lbl-sub {
@@ -178,12 +196,16 @@
     }
 
     .bank-val {
-      padding-top: 1px;
+      font-size: 9.6pt;
+      font-weight: 600;
+      line-height: 1.35;
       white-space: nowrap;
+      padding-top: 1px;
     }
 
     .status-line {
       font-size: 10.5px;
+      font-weight: 600;
       margin: 5px 0 6px;
       padding-left: 1px;
       letter-spacing: 0.01em;
@@ -214,6 +236,12 @@
     }
 
     .tx-table td { font-weight: 300; }
+
+    .tx-table td.col-date,
+    .tx-table td.col-desc {
+      font-family: "Hiragino Kaku Gothic Pro", "Hiragino Kaku Gothic ProN", "HiraKakuPro-W6", "Yu Gothic", "Meiryo", sans-serif;
+      font-weight: 600;
+    }
 
     .tx-table .col-date { width: 11%; }
     .tx-table .col-pay { width: 10%; }
@@ -294,6 +322,9 @@
       justify-self: end;
       white-space: nowrap;
       text-align: right;
+      font-family: "Hiragino Kaku Gothic Pro", "Hiragino Kaku Gothic ProN", "HiraKakuPro-W6", "Yu Gothic", "Meiryo", sans-serif;
+      font-size: 16pt;
+      font-weight: 600;
       line-height: 1;
       letter-spacing: 0.02em;
     }
@@ -302,6 +333,7 @@
       margin-top: 7px;
       color: #222;
       font-size: 9.6pt;
+      font-weight: 600;
       line-height: 1;
     }
 
@@ -375,20 +407,20 @@
         <div><label>口座番号</label><input id="f-account-no" type="text" value="1234567" /></div>
       </div>
       <div class="row-2 group">
-        <div><label>照会開始日</label><input id="f-period-start" type="date" value="2023-12-01" /></div>
-        <div><label>照会終了日</label><input id="f-period-end" type="date" value="2024-04-01" /></div>
+        <div><label>照会開始日</label><input id="f-period-start" class="date-input" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="2023-12-01" value="2023-12-01" /></div>
+        <div><label>照会終了日</label><input id="f-period-end" class="date-input" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="2024-04-01" value="2024-04-01" /></div>
       </div>
       <div class="group"><label>絞り込み</label><input id="f-filter" type="text" value="全取引" /></div>
       <div class="row-2 group">
-        <div><label>Eco通帳申込日</label><input id="f-eco-date" type="date" value="2023-11-07" /></div>
+        <div><label>Eco通帳申込日</label><input id="f-eco-date" class="date-input" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="2023-11-07" value="2023-11-07" /></div>
         <div><label>銀行コード</label><input id="f-bank-code" type="text" value="0005" /></div>
       </div>
       <div class="row-2 group">
-        <div><label>表示日</label><input id="f-now-date" type="date" /></div>
+        <div><label>表示日</label><input id="f-now-date" class="date-input" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="2024-04-05" /></div>
         <div><label>表示時刻</label><input id="f-now-time" type="time" value="12:20" /></div>
       </div>
       <div class="row-2 group">
-        <div><label>印刷日</label><input id="f-print-date" type="date" /></div>
+        <div><label>印刷日</label><input id="f-print-date" class="date-input" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="2024-04-05" /></div>
         <div><label>印刷時刻</label><input id="f-print-time" type="time" value="12:21" /></div>
       </div>
       <div class="row-2 group">
@@ -502,31 +534,20 @@
           <img class="brand-img" src="assets/mufg-header.png" alt="MUFG 三菱UFJ銀行" />
           <hr class="top-rule" />
           <div class="info-card">
-            <div class="info-grid">
-              <div class="lbl font-w6">お名前（カナ）</div>
-              <div class="val font-w3">${d["f-name"]}</div>
-              <div class="bank-block">
-                <div class="bank-lbl font-w6">
-                  <span>金融機関コード</span>
-                  <span class="bank-lbl-sub">（銀行コード）</span>
-                </div>
-                <div class="bank-val font-w3">${d["f-bank-code"] || "0005"}</div>
+            <div class="bank-block">
+              <div class="bank-lbl font-w6">
+                <span>金融機関コード</span>
+                <span class="bank-lbl-sub">（銀行コード）</span>
               </div>
-
-              <div class="lbl font-w6">店番／店名</div>
-              <div class="val font-w3">店番${d["f-branch-no"]}　${d["f-branch-name"]}</div>
-
-              <div class="lbl font-w6">科目／口座番号</div>
-              <div class="val font-w3">${d["f-account-type"]} ${d["f-account-no"]}</div>
-
-              <div class="lbl font-w6">照会期間</div>
-              <div class="val font-w3">${formatJPDate(d["f-period-start"])}～${formatJPDate(d["f-period-end"])}</div>
-
-              <div class="lbl font-w6">絞り込み</div>
-              <div class="val font-w3">${d["f-filter"]}</div>
-
-              <div class="lbl font-w6">Eco通帳申込日</div>
-              <div class="val font-w3">${formatJPDate(d["f-eco-date"])}</div>
+              <div class="bank-val font-w3">${d["f-bank-code"] || "0005"}</div>
+            </div>
+            <div class="info-rows">
+              <div class="info-row"><span class="lbl font-w6">お名前（カナ）</span><span class="val font-w3">${d["f-name"]}</span></div>
+              <div class="info-row"><span class="lbl font-w6">店番／店名</span><span class="val font-w3">店番${d["f-branch-no"]}　${d["f-branch-name"]}</span></div>
+              <div class="info-row"><span class="lbl font-w6">科目／口座番号</span><span class="val font-w3">${d["f-account-type"]} ${d["f-account-no"]}</span></div>
+              <div class="info-row"><span class="lbl font-w6">照会期間</span><span class="val font-w3">${formatJPDate(d["f-period-start"])}～${formatJPDate(d["f-period-end"])}</span></div>
+              <div class="info-row"><span class="lbl font-w6">絞り込み</span><span class="val font-w3">${d["f-filter"]}</span></div>
+              <div class="info-row"><span class="lbl font-w6">Eco通帳申込日</span><span class="val font-w3">${formatJPDate(d["f-eco-date"])}</span></div>
             </div>
           </div>
           <div class="status-line font-w3">Eco通帳（インターネット通帳）${nowDate} ${nowTime}現在</div>
@@ -580,7 +601,7 @@
       list.innerHTML = rows.map((row, idx) => `
         <div class="tx-editor" data-idx="${idx}">
           <div class="row-2">
-            <div><div class="mini-label">日付</div><input type="date" data-key="date" value="${row.date||""}" /></div>
+            <div><div class="mini-label">日付</div><input type="text" class="date-input" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="2024-01-02" data-key="date" value="${row.date||""}" /></div>
             <div><div class="mini-label">差引残高</div><input type="text" data-key="bal" value="${row.bal||""}" /></div>
           </div>
           <div class="row-3">
