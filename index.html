@@ -481,38 +481,6 @@
       <div class="group"><label data-ja="1ページ行数（第1ページ）" data-zh="每页行数（第1页）">1ページ行数（第1ページ）</label><input id="f-rows-per-page" type="number" min="8" max="20" value="14" /></div>
 
 
-      <h2 style="font-size:13px;margin:18px 0 6px;" data-ja="90日取引説明文" data-zh="90天交易说明">90日取引説明文</h2>
-      <div id="explanation-panel" class="tx-editor" style="background:#f7f9fc;">
-        <div class="group"><label data-ja="団体名" data-zh="组织名称">団体名</label><input id="f-org-name" type="text" value="特定非営利活動法人 盛岡まち並み塾" /></div>
-        <div class="group"><label data-ja="法人番号" data-zh="法人编号">法人番号</label><input id="f-org-number" type="text" value="8400005007810" /></div>
-        <div class="group"><label data-ja="所在地" data-zh="地址">所在地</label><input id="f-org-address" type="text" value="〒020-0827 岩手県盛岡市鉈屋町3番15号" /></div>
-        <div class="group"><label data-ja="説明タイトル" data-zh="说明标题">説明タイトル</label><input id="f-explain-title" type="text" value="90-day bank transaction explanation" /></div>
-        <div class="group"><label data-ja="説明本文" data-zh="说明正文">説明本文</label>
-          <textarea id="f-explain-body" rows="10" style="width:100%;padding:6px 8px;border:1px solid #bbb;border-radius:3px;font:inherit;font-size:12px;line-height:1.45;">This document explains the bank transactions of our organization for the past 90 days.
-
-Our organization is a registered Japanese NPO working on the preservation and utilization of historical townscapes, traditional machiya buildings, local culture, community development, and tourism/cultural activities in Morioka.
-
-During this period, the main incoming transactions were related to donations, membership fees, and event participation fees. The main outgoing transactions were used for historical townscape preservation activities, community event operations, volunteer transportation, printing of promotional materials, facility maintenance, website maintenance, and bank transfer fees.
-
-All transactions are related to our nonprofit activities and daily organizational operations.
-
-Transaction categories:
-1. 寄付金受領 - Donations received
-2. 会費収入 - Membership fees
-3. イベント参加費収入 - Event participation fees
-4. 盛岡町家保存活動費 - Morioka machiya preservation activity expenses
-5. 歴史的まち並み保全活動費 - Historical townscape preservation expenses
-6. 地域交流イベント運営費 - Community event operation expenses
-7. 広報資料・チラシ印刷費 - Printing of flyers and promotional materials
-8. 施設維持管理費 - Facility maintenance expenses
-9. ボランティア交通費 - Volunteer transportation expenses
-10. ウェブサイト維持管理費 - Website maintenance expenses
-11. 振込手数料 / 銀行手数料 - Bank transfer fees
-
-Please let us know if any additional supporting documents are required.</textarea>
-        </div>
-      </div>
-
       <h2 style="font-size:13px;margin:14px 0 6px;" data-ja="取引明細" data-zh="交易明细">取引明細</h2>
       <div id="tx-list"></div>
       <button type="button" id="btn-add-row" data-ja="+ 行追加" data-zh="+ 添加行">+ 行追加</button>
@@ -529,7 +497,7 @@ Please let us know if any additional supporting documents are required.</textare
   </div>
 
   <script>
-    const STORAGE_KEY = "mufg-statement-template-v4-npo";
+    const STORAGE_KEY = "mufg-statement-template-v5-clean";
 
 
     const defaultRows = [
@@ -604,7 +572,10 @@ Please let us know if any additional supporting documents are required.</textare
 
     const getFormData = () => {
       const data = {};
-      fields.forEach(id => data[id] = document.getElementById(id).value);
+      fields.forEach(id => {
+        const fieldElement = document.getElementById(id);
+        if (fieldElement) data[id] = fieldElement.value;
+      });
       data.rows = structuredClone(rows);
       return data;
     };
@@ -612,7 +583,7 @@ Please let us know if any additional supporting documents are required.</textare
     const setFormData = (data) => {
       fields.forEach(id => {
         const el = document.getElementById(id);
-        if (data[id] !== undefined) el.value = data[id];
+        if (el && data[id] !== undefined) el.value = data[id];
       });
       rows = structuredClone(data.rows || defaultRows);
     };
@@ -621,26 +592,6 @@ Please let us know if any additional supporting documents are required.</textare
       const out = [];
       for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
       return out.length ? out : [[]];
-    };
-
-
-    const renderExplanation = (d) => {
-      const title = d["f-explain-title"] || "90-day bank transaction explanation";
-      const body = d["f-explain-body"] || "";
-      const org = d["f-org-name"] || "";
-      const num = d["f-org-number"] || "";
-      const addr = d["f-org-address"] || "";
-      return `
-        <section class="explain-sheet">
-          <h2 class="font-w6">${title}</h2>
-          <div class="explain-meta font-w3">
-            <div><strong>Organization name:</strong> ${org}</div>
-            <div><strong>Corporate number:</strong> ${num}</div>
-            <div><strong>Address:</strong> ${addr}</div>
-          </div>
-          <div class="explain-body font-w3">${body.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
-        </section>
-      `;
     };
 
     const renderHeader = (d) => {
@@ -798,8 +749,10 @@ Please let us know if any additional supporting documents are required.</textare
     };
 
     fields.forEach(id => {
-      document.getElementById(id).addEventListener("input", renderPreview);
-      document.getElementById(id).addEventListener("change", renderPreview);
+      const fieldElement = document.getElementById(id);
+      if (!fieldElement) return;
+      fieldElement.addEventListener("input", renderPreview);
+      fieldElement.addEventListener("change", renderPreview);
     });
 
     document.getElementById("f-now-date").value = "2024-03-05";
@@ -826,6 +779,7 @@ Please let us know if any additional supporting documents are required.</textare
       rows = structuredClone(defaultRows);
       fields.forEach(id => {
         const el = document.getElementById(id);
+        if (!el) return;
         if (el.tagName === "SELECT") el.selectedIndex = 0;
         else el.value = el.defaultValue;
       });
