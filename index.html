@@ -470,7 +470,7 @@
         <button type="button" data-lang="ja" class="active">日本語</button>
         <button type="button" data-lang="zh">中文</button>
       </div>
-      <p class="hint" data-ja="期間を変更すると表格内の全日期行が自動再生成します。" data-zh="更改期间后表格会自动生成对应所有日期的行。">期间を変更すると表格内の全日期行が自動再生成します。</p>
+      <p class="hint" data-ja="期間を変更すると表格内の全日期行が自動再生成します。" data-zh="更改期间后自动生成全部日期，约七成日期填充NPO交易，余额与合计自动联动。">期间変更で全日行を生成し、約7割の日にNPO取引を自動填充します。残高と合計は自動連動。</p>
 
       <div class="group"><label data-ja="お名前（カナ）" data-zh="姓名（片假名）">お名前（カナ）</label><input id="f-name" type="text" value="トクテイヒエイリカツドウホウジン　モリオカマチナミジュク" /></div>
       <div class="row-2 group">
@@ -529,7 +529,7 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "mufg-statement-template-v7-period-all-days";
+    const STORAGE_KEY = "mufg-statement-template-v8-dense-tx";
 
 
     const defaultRows = [
@@ -721,7 +721,19 @@
       list.querySelectorAll(".tx-editor").forEach(editor => {
         const idx = Number(editor.dataset.idx);
         editor.querySelectorAll("input").forEach(input => {
-          input.addEventListener("input", () => { rows[idx][input.dataset.key] = input.value; renderPreview(); });
+          input.addEventListener("input", () => {
+            rows[idx][input.dataset.key] = input.value;
+            // Keep running balances consistent after manual edits.
+            let runningBalance = 0;
+            rows = rows.map((row) => {
+              const payNum = Number(String(row.pay || "").replace(/,/g, "")) || 0;
+              const depNum = Number(String(row.dep || "").replace(/,/g, "")) || 0;
+              runningBalance = runningBalance + depNum - payNum;
+              return { ...row, bal: String(runningBalance) };
+            });
+            syncTotalDepositFromRows();
+            renderPreview();
+          });
         });
         editor.querySelectorAll("button").forEach(btn => {
           btn.addEventListener("click", () => {
@@ -787,8 +799,46 @@
     };
 
 
+    const TRANSACTION_TEMPLATES = [
+      { memo: "寄付金受領", desc: "振込１　キフキン", kind: "dep", min: 10000, max: 80000, step: 1000 },
+      { memo: "会費収入", desc: "振込１　カイヒ", kind: "dep", min: 5000, max: 40000, step: 1000 },
+      { memo: "イベント参加費収入", desc: "振込１　イベントサンカヒ", kind: "dep", min: 8000, max: 50000, step: 1000 },
+      { memo: "盛岡町家保存活動費", desc: "振込ＩＢ２　マチヤホゾン", kind: "pay", min: 5000, max: 35000, step: 500 },
+      { memo: "歴史的まち並み保全活動費", desc: "振込ＩＢ２　レキシテキマチナミ", kind: "pay", min: 8000, max: 40000, step: 500 },
+      { memo: "地域交流イベント運営費", desc: "振込ＩＢ２　チイキコウリュウ", kind: "pay", min: 6000, max: 30000, step: 500 },
+      { memo: "広報資料・チラシ印刷費", desc: "振込ＩＢ２　チラシインサツ", kind: "pay", min: 3000, max: 18000, step: 500 },
+      { memo: "施設維持管理費", desc: "振込ＩＢ２　シセツイジ", kind: "pay", min: 4000, max: 25000, step: 500 },
+      { memo: "ボランティア交通費", desc: "カ－ド　コウツウヒ", kind: "pay", min: 1000, max: 12000, step: 100 },
+      { memo: "ウェブサイト維持管理費", desc: "カ－ド　ウエブサイト", kind: "pay", min: 2000, max: 15000, step: 100 },
+      { memo: "振込手数料", desc: "手数料", kind: "pay", min: 110, max: 880, step: 110 },
+      { memo: "銀行手数料", desc: "手数料", kind: "pay", min: 110, max: 660, step: 110 },
+    ];
+
+    const randomIntInclusive = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+    const randomAmount = (min, max, step) => {
+      const steps = Math.floor((max - min) / step);
+      return min + randomIntInclusive(0, Math.max(0, steps)) * step;
+    };
+
+    const pickTransactionTemplate = () => TRANSACTION_TEMPLATES[randomIntInclusive(0, TRANSACTION_TEMPLATES.length - 1)];
+
+    const syncTotalDepositFromRows = () => {
+      if (!rows.length) {
+        const totalField = document.getElementById("f-total-deposit");
+        if (totalField) totalField.value = "0";
+        return 0;
+      }
+      const lastBalance = Number(String(rows[rows.length - 1].bal || "").replace(/,/g, "")) || 0;
+      const totalField = document.getElementById("f-total-deposit");
+      if (totalField) totalField.value = String(lastBalance);
+      return lastBalance;
+    };
+
     const regenerateRowsForPeriod = (opts) => {
       const silent = !!(opts && opts.silent);
+      const forceRandom = !!(opts && opts.forceRandom);
+      const fillRatio = typeof (opts && opts.fillRatio) === "number" ? opts.fillRatio : 0.72;
       const startDateValue = (document.getElementById("f-period-start") || {}).value || "";
       const endDateValue = (document.getElementById("f-period-end") || {}).value || "";
       const startDateParts = String(startDateValue).trim().split("-").map(Number);
@@ -801,7 +851,6 @@
       if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return false;
       if (startDate > endDate) return false;
 
-      // Guard against accidental huge ranges.
       const dayCount = Math.floor((endDate - startDate) / 86400000) + 1;
       if (dayCount > 400) return false;
 
@@ -814,46 +863,82 @@
       const generatedRows = [];
       const cursorDate = new Date(startDate.getTime());
       let runningBalance = 0;
+
       while (cursorDate <= endDate) {
         const isoDate = isoFor(cursorDate);
         const existingRow = existingRowsByDate[isoDate];
-        if (existingRow) {
-          const payNum = Number(String(existingRow.pay || "").replace(/,/g, "")) || 0;
-          const depNum = Number(String(existingRow.dep || "").replace(/,/g, "")) || 0;
-          const existingBal = Number(String(existingRow.bal || "").replace(/,/g, ""));
-          if (!Number.isNaN(existingBal) && String(existingRow.bal || "").trim() !== "") {
-            runningBalance = existingBal;
+        let pay = "";
+        let dep = "";
+        let desc = "";
+        let memo = "";
+
+        const hasExistingTxn = existingRow && (
+          String(existingRow.pay || "").trim() !== "" ||
+          String(existingRow.dep || "").trim() !== "" ||
+          String(existingRow.desc || "").trim() !== "" ||
+          String(existingRow.memo || "").trim() !== ""
+        );
+
+        if (hasExistingTxn && !forceRandom) {
+          pay = existingRow.pay || "";
+          dep = existingRow.dep || "";
+          desc = existingRow.desc || "";
+          memo = existingRow.memo || "";
+        } else if (Math.random() < fillRatio) {
+          // Fill roughly 7 of 10 days with random category content.
+          const template = pickTransactionTemplate();
+          const amount = randomAmount(template.min, template.max, template.step);
+          if (template.kind === "dep") {
+            dep = String(amount);
           } else {
-            runningBalance = runningBalance + depNum - payNum;
+            // Avoid overdraft for expense rows.
+            const maxPayable = Math.max(0, runningBalance);
+            if (maxPayable < template.min) {
+              // Not enough balance for expense: switch to a donation/income row.
+              const incomeTemplates = TRANSACTION_TEMPLATES.filter((item) => item.kind === "dep");
+              const incomeTemplate = incomeTemplates[randomIntInclusive(0, incomeTemplates.length - 1)];
+              dep = String(randomAmount(incomeTemplate.min, incomeTemplate.max, incomeTemplate.step));
+              desc = incomeTemplate.desc;
+              memo = incomeTemplate.memo;
+            } else {
+              const payable = Math.min(amount, maxPayable);
+              const stepped = Math.max(template.min, Math.floor(payable / template.step) * template.step);
+              pay = String(Math.max(template.min, stepped));
+              desc = template.desc;
+              memo = template.memo;
+            }
           }
-          generatedRows.push({
-            date: isoDate,
-            pay: existingRow.pay || "",
-            dep: existingRow.dep || "",
-            desc: existingRow.desc || "",
-            bal: String(runningBalance),
-            memo: existingRow.memo || "",
-          });
-        } else {
-          generatedRows.push({
-            date: isoDate,
-            pay: "",
-            dep: "",
-            desc: "",
-            bal: String(runningBalance),
-            memo: "",
-          });
+          if (!desc) {
+            desc = template.desc;
+            memo = template.memo;
+          }
         }
+
+        const payNum = Number(String(pay || "").replace(/,/g, "")) || 0;
+        const depNum = Number(String(dep || "").replace(/,/g, "")) || 0;
+        runningBalance = runningBalance + depNum - payNum;
+
+        generatedRows.push({
+          date: isoDate,
+          pay,
+          dep,
+          desc,
+          bal: String(runningBalance),
+          memo,
+        });
+
         cursorDate.setDate(cursorDate.getDate() + 1);
       }
 
       rows = generatedRows;
+      syncTotalDepositFromRows();
       if (!silent) {
         renderTxEditors();
         renderPreview();
       }
       return true;
     };
+
 
 
     fields.forEach(id => {
@@ -1028,7 +1113,7 @@
       });
       document.getElementById("f-now-date").value = "2024-03-05";
       document.getElementById("f-print-date").value = "2024-03-05";
-      regenerateRowsForPeriod({ silent: true });
+      regenerateRowsForPeriod({ silent: true, forceRandom: true });
       renderTxEditors();
       renderPreview();
     });
@@ -1073,7 +1158,7 @@
       if (savedLang === "zh" || savedLang === "ja") currentPanelLang = savedLang;
     } catch (error) {}
     try { bindPeriodRegeneration(); } catch (error) { console.error(error); }
-    try { regenerateRowsForPeriod({ silent: true }); } catch (error) { console.error(error); }
+    try { regenerateRowsForPeriod({ silent: true, forceRandom: true }); } catch (error) { console.error(error); }
     renderTxEditors();
     renderPreview();
     applyPanelLanguage(currentPanelLang);
