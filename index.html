@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
@@ -171,7 +171,6 @@
       flex: 1 1 auto;
       min-width: 0;
       line-height: 1;
-      font-weight: 600;
     }
 
     .bank-block {
@@ -197,7 +196,6 @@
 
     .bank-val {
       font-size: 9.6pt;
-      font-weight: 600;
       line-height: 1.35;
       white-space: nowrap;
       padding-top: 1px;
@@ -205,7 +203,6 @@
 
     .status-line {
       font-size: 10.5px;
-      font-weight: 600;
       margin: 5px 0 6px;
       padding-left: 1px;
       letter-spacing: 0.01em;
@@ -257,9 +254,27 @@
     }
 
     .tx-table td.num {
+      font-family: "Hiragino Kaku Gothic Pro", "Hiragino Kaku Gothic ProN", "HiraKakuPro-W3", "Yu Gothic", "Meiryo", sans-serif;
+      font-weight: 300;
+      font-size: 8.8pt;
+    }
+
+    .tx-table .amount-digits-strong {
       font-family: "Hiragino Kaku Gothic Pro", "Hiragino Kaku Gothic ProN", "HiraKakuPro-W6", "Yu Gothic", "Meiryo", sans-serif;
       font-weight: 600;
       font-size: 9.6pt;
+    }
+
+    .tx-table .amount-digits-balance {
+      font-family: "Hiragino Kaku Gothic Pro", "Hiragino Kaku Gothic ProN", "HiraKakuPro-W3", "Yu Gothic", "Meiryo", sans-serif;
+      font-weight: 300;
+      font-size: 9.6pt;
+    }
+
+    .tx-table .amount-yen {
+      font-family: "Hiragino Kaku Gothic Pro", "Hiragino Kaku Gothic ProN", "HiraKakuPro-W3", "Yu Gothic", "Meiryo", sans-serif;
+      font-weight: 300;
+      font-size: 8.8pt;
     }
 
     .tx-table .col-desc { padding-left: 4px; }
@@ -367,8 +382,31 @@
     }
     .tx-editor .tx-actions { display: flex; justify-content: flex-end; gap: 4px; margin-top: 4px; }
     .tx-editor button { padding: 3px 7px; font-size: 11px; }
+.panel .lang-toggle {
+      display: inline-flex;
+      gap: 0;
+      border: 1px solid #aaa;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .panel .lang-toggle button {
+      border: 0;
+      border-radius: 0;
+      padding: 4px 10px;
+      background: #fff;
+      font-size: 11px;
+      color: #333;
+    }
+    .panel .lang-toggle button.active {
+      background: var(--red);
+      color: #fff;
+    }
+.panel [data-ja][data-zh] { }
+    html[lang="zh"] [data-ja-only], html[lang="ja"] [data-zh-only] { display: none; }
 
-    @media (max-width: 1050px) {
+
+@media (max-width: 1050px) {
       .app { grid-template-columns: 1fr; }
       .panel { position: static; height: auto; }
     }
@@ -391,56 +429,93 @@
 <body>
   <div class="app">
     <aside class="panel">
-      <h1>入出金明細 編集</h1>
-      <p class="hint">左で編集、右で原版式プレビュー。第2页以降は明細のみ表示（原版と同じ）。</p>
+      <h1 data-ja="入出金明細 編集" data-zh="入出金明细编辑">入出金明細 編集</h1>
+      <div class="lang-toggle" id="lang-toggle">
+        <button type="button" data-lang="ja" class="active">日本語</button>
+        <button type="button" data-lang="zh">中文</button>
+      </div>
+      <p class="hint" data-ja="左で編集、右で原版式プレビュー。第2ページ以降は明細のみ表示（原版と同じ）。" data-zh="左侧编辑，右侧原版式预览。第2页起只显示明细（与原版一致）。">左で編集、右で原版式プレビュー。第2ページ以降は明細のみ表示（原版と同じ）。</p>
 
-      <div class="group"><label>お名前（カナ）</label><input id="f-name" type="text" value="ヤマダ　タロウ　様" /></div>
+      <div class="group"><label data-ja="お名前（カナ）" data-zh="姓名（片假名）">お名前（カナ）</label><input id="f-name" type="text" value="トクテイヒエイリカツドウホウジン　モリオカマチナミジュク" /></div>
       <div class="row-2 group">
-        <div><label>店番</label><input id="f-branch-no" type="text" value="481" /></div>
-        <div><label>店名</label><input id="f-branch-name" type="text" value="○○支店" /></div>
+        <div><label data-ja="店番" data-zh="支行号">店番</label><input id="f-branch-no" type="text" value="481" /></div>
+        <div><label data-ja="店名" data-zh="支行名">店名</label><input id="f-branch-name" type="text" value="盛岡支店" /></div>
       </div>
       <div class="row-2 group">
         <div>
-          <label>科目</label>
+          <label data-ja="科目" data-zh="账户类型">科目</label>
           <select id="f-account-type"><option>普通</option><option>当座</option></select>
         </div>
-        <div><label>口座番号</label><input id="f-account-no" type="text" value="1234567" /></div>
+        <div><label data-ja="口座番号" data-zh="账户号码">口座番号</label><input id="f-account-no" type="text" value="1234567" /></div>
       </div>
       <div class="row-2 group">
-        <div><label>照会開始日</label><input id="f-period-start" class="date-input" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="2023-12-01" value="2023-12-01" /></div>
-        <div><label>照会終了日</label><input id="f-period-end" class="date-input" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="2024-04-01" value="2024-04-01" /></div>
+        <div><label data-ja="照会開始日" data-zh="查询开始日期">照会開始日</label><input id="f-period-start" class="date-input" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="2023-12-01" value="2023-12-06" /></div>
+        <div><label data-ja="照会終了日" data-zh="查询结束日期">照会終了日</label><input id="f-period-end" class="date-input" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="2024-04-01" value="2024-03-05" /></div>
       </div>
-      <div class="group"><label>絞り込み</label><input id="f-filter" type="text" value="全取引" /></div>
+      <div class="group"><label data-ja="絞り込み" data-zh="筛选">絞り込み</label><input id="f-filter" type="text" value="全取引" /></div>
       <div class="row-2 group">
-        <div><label>Eco通帳申込日</label><input id="f-eco-date" class="date-input" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="2023-11-07" value="2023-11-07" /></div>
-        <div><label>銀行コード</label><input id="f-bank-code" type="text" value="0005" /></div>
-      </div>
-      <div class="row-2 group">
-        <div><label>表示日</label><input id="f-now-date" class="date-input" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="2024-04-05" /></div>
-        <div><label>表示時刻</label><input id="f-now-time" type="time" value="12:20" /></div>
+        <div><label data-ja="Eco通帳申込日" data-zh="Eco通帐申请日">Eco通帳申込日</label><input id="f-eco-date" class="date-input" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="2023-11-07" value="2023-11-07" /></div>
+        <div><label data-ja="銀行コード" data-zh="银行代码">銀行コード</label><input id="f-bank-code" type="text" value="0005" /></div>
       </div>
       <div class="row-2 group">
-        <div><label>印刷日</label><input id="f-print-date" class="date-input" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="2024-04-05" /></div>
-        <div><label>印刷時刻</label><input id="f-print-time" type="time" value="12:21" /></div>
+        <div><label data-ja="表示日" data-zh="显示日期">表示日</label><input id="f-now-date" class="date-input" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="2024-03-05" value="2024-03-05" /></div>
+        <div><label data-ja="表示時刻" data-zh="显示时刻">表示時刻</label><input id="f-now-time" type="time" value="12:20" /></div>
       </div>
       <div class="row-2 group">
-        <div><label>页码（留空=自动）</label><input id="f-page-num" type="number" min="1" placeholder="如 4" /></div>
-        <div><label>总页数（留空=自动）</label><input id="f-page-total" type="number" min="1" placeholder="如 5" /></div>
+        <div><label data-ja="印刷日" data-zh="打印日期">印刷日</label><input id="f-print-date" class="date-input" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="2024-03-05" value="2024-03-05" /></div>
+        <div><label data-ja="印刷時刻" data-zh="打印时刻">印刷時刻</label><input id="f-print-time" type="time" value="12:21" /></div>
       </div>
-      <div class="group"><label>フッター URL</label><input id="f-url" type="text" value="https://direct11.bk.mufg.jp/ib/dfw/APL/bnkib/banking" /></div>
-      <div class="group"><label>お預り金額合計</label><input id="f-total-deposit" type="text" value="6026" /></div>
-      <div class="group"><label>Copyright 年份</label><input id="f-copyright-year" type="text" value="2024" /></div>
-      <div class="group"><label>1ページ行数（第1页）</label><input id="f-rows-per-page" type="number" min="8" max="20" value="14" /></div>
+      <div class="row-2 group">
+        <div><label data-ja="ページ番号（空欄=自動）" data-zh="页码（留空=自动）">ページ番号（空欄=自動）</label><input id="f-page-num" type="number" min="1" placeholder="如 4" /></div>
+        <div><label data-ja="総ページ数（空欄=自動）" data-zh="总页数（留空=自动）">総ページ数（空欄=自動）</label><input id="f-page-total" type="number" min="1" placeholder="如 5" /></div>
+      </div>
+      <div class="group"><label data-ja="フッター URL" data-zh="页脚 URL">フッター URL</label><input id="f-url" type="text" value="https://direct11.bk.mufg.jp/ib/dfw/APL/bnkib/banking" /></div>
+      <div class="group"><label data-ja="お預り金額合計" data-zh="收款金额合计">お預り金額合計</label><input id="f-total-deposit" type="text" value="128540" /></div>
+      <div class="group"><label data-ja="Copyright 年" data-zh="版权年份">Copyright 年</label><input id="f-copyright-year" type="text" value="2024" /></div>
+      <div class="group"><label data-ja="1ページ行数（第1ページ）" data-zh="每页行数（第1页）">1ページ行数（第1ページ）</label><input id="f-rows-per-page" type="number" min="8" max="20" value="14" /></div>
 
-      <h2 style="font-size:13px;margin:14px 0 6px;">取引明細</h2>
+
+      <h2 style="font-size:13px;margin:18px 0 6px;" data-ja="90日取引説明文" data-zh="90天交易说明">90日取引説明文</h2>
+      <div id="explanation-panel" class="tx-editor" style="background:#f7f9fc;">
+        <div class="group"><label data-ja="団体名" data-zh="组织名称">団体名</label><input id="f-org-name" type="text" value="特定非営利活動法人 盛岡まち並み塾" /></div>
+        <div class="group"><label data-ja="法人番号" data-zh="法人编号">法人番号</label><input id="f-org-number" type="text" value="8400005007810" /></div>
+        <div class="group"><label data-ja="所在地" data-zh="地址">所在地</label><input id="f-org-address" type="text" value="〒020-0827 岩手県盛岡市鉈屋町3番15号" /></div>
+        <div class="group"><label data-ja="説明タイトル" data-zh="说明标题">説明タイトル</label><input id="f-explain-title" type="text" value="90-day bank transaction explanation" /></div>
+        <div class="group"><label data-ja="説明本文" data-zh="说明正文">説明本文</label>
+          <textarea id="f-explain-body" rows="10" style="width:100%;padding:6px 8px;border:1px solid #bbb;border-radius:3px;font:inherit;font-size:12px;line-height:1.45;">This document explains the bank transactions of our organization for the past 90 days.
+
+Our organization is a registered Japanese NPO working on the preservation and utilization of historical townscapes, traditional machiya buildings, local culture, community development, and tourism/cultural activities in Morioka.
+
+During this period, the main incoming transactions were related to donations, membership fees, and event participation fees. The main outgoing transactions were used for historical townscape preservation activities, community event operations, volunteer transportation, printing of promotional materials, facility maintenance, website maintenance, and bank transfer fees.
+
+All transactions are related to our nonprofit activities and daily organizational operations.
+
+Transaction categories:
+1. 寄付金受領 - Donations received
+2. 会費収入 - Membership fees
+3. イベント参加費収入 - Event participation fees
+4. 盛岡町家保存活動費 - Morioka machiya preservation activity expenses
+5. 歴史的まち並み保全活動費 - Historical townscape preservation expenses
+6. 地域交流イベント運営費 - Community event operation expenses
+7. 広報資料・チラシ印刷費 - Printing of flyers and promotional materials
+8. 施設維持管理費 - Facility maintenance expenses
+9. ボランティア交通費 - Volunteer transportation expenses
+10. ウェブサイト維持管理費 - Website maintenance expenses
+11. 振込手数料 / 銀行手数料 - Bank transfer fees
+
+Please let us know if any additional supporting documents are required.</textarea>
+        </div>
+      </div>
+
+      <h2 style="font-size:13px;margin:14px 0 6px;" data-ja="取引明細" data-zh="交易明细">取引明細</h2>
       <div id="tx-list"></div>
-      <button type="button" id="btn-add-row">+ 行追加</button>
+      <button type="button" id="btn-add-row" data-ja="+ 行追加" data-zh="+ 添加行">+ 行追加</button>
 
       <div class="actions">
-        <button class="primary" id="btn-print">印刷 / PDF保存</button>
-        <button id="btn-save">保存</button>
-        <button id="btn-load">読込</button>
-        <button id="btn-reset">リセット</button>
+        <button class="primary" id="btn-print" data-ja="印刷 / PDF保存" data-zh="打印 / 保存为 PDF">印刷 / PDF保存</button>
+        <button id="btn-save" data-ja="保存" data-zh="保存">保存</button>
+        <button id="btn-load" data-ja="読込" data-zh="读取">読込</button>
+        <button id="btn-reset" data-ja="リセット" data-zh="重置">リセット</button>
       </div>
     </aside>
 
@@ -448,28 +523,29 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "mufg-statement-template-v3";
+    const STORAGE_KEY = "mufg-statement-template-v4-npo";
 
 
     const defaultRows = [
-      { date:"2023-12-06", pay:"", dep:"210000", desc:"カ－ド", bal:"211000", memo:"" },
-      { date:"2023-12-06", pay:"", dep:"22000", desc:"カ－ド", bal:"233000", memo:"" },
-      { date:"2023-12-06", pay:"3000", dep:"", desc:"カ－ド", bal:"230000", memo:"" },
-      { date:"2023-12-11", pay:"210000", dep:"", desc:"カ－ド", bal:"20000", memo:"" },
-      { date:"2023-12-13", pay:"5000", dep:"", desc:"カ－ド", bal:"15000", memo:"" },
-      { date:"2023-12-18", pay:"12000", dep:"", desc:"カ－ド", bal:"3000", memo:"" },
-      { date:"2024-01-02", pay:"2000", dep:"", desc:"カードＣ１", bal:"1000", memo:"" },
-      { date:"2024-01-02", pay:"", dep:"5000", desc:"振込１　ヤマダ　ハナコ", bal:"6000", memo:"" },
-      { date:"2024-01-02", pay:"5000", dep:"", desc:"カードＣ１", bal:"1000", memo:"" },
-      { date:"2024-01-02", pay:"330", dep:"", desc:"手数料", bal:"670", memo:"" },
-      { date:"2024-01-04", pay:"", dep:"10000", desc:"カ－ド", bal:"10670", memo:"" },
-      { date:"2024-01-07", pay:"5000", dep:"", desc:"カ－ド", bal:"5670", memo:"" },
-      { date:"2024-01-28", pay:"3920", dep:"", desc:"振込ＩＢ２　サトウ　イチロウ", bal:"1750", memo:"" },
-      { date:"2024-01-28", pay:"730", dep:"", desc:"マツヤ", bal:"1020", memo:"" },
-      { date:"2024-01-30", pay:"", dep:"3000", desc:"カ－ド", bal:"4020", memo:"" },
-      { date:"2024-01-31", pay:"425", dep:"", desc:"デビット１　２９９９４７　イオングル－フ", bal:"3595", memo:"" },
-      { date:"2024-02-04", pay:"490", dep:"", desc:"デビット１　５１８３６３　ムジルシリヨウ", bal:"3105", memo:"" },
-      { date:"2024-02-05", pay:"", dep:"30000", desc:"振込１　スズキ　ジロウ", bal:"33105", memo:"" },
+      { date:"2023-12-08", pay:"", dep:"50000", desc:"振込１　キフキン", bal:"50000", memo:"寄付金受領" },
+      { date:"2023-12-12", pay:"", dep:"30000", desc:"振込１　カイヒ", bal:"80000", memo:"会費収入" },
+      { date:"2023-12-15", pay:"12000", dep:"", desc:"振込ＩＢ２　チラシインサツ", bal:"68000", memo:"広報資料・チラシ印刷費" },
+      { date:"2023-12-20", pay:"", dep:"25000", desc:"振込１　イベントサンカヒ", bal:"93000", memo:"イベント参加費収入" },
+      { date:"2023-12-22", pay:"18000", dep:"", desc:"振込ＩＢ２　マチヤホゾン", bal:"75000", memo:"盛岡町家保存活動費" },
+      { date:"2023-12-27", pay:"330", dep:"", desc:"手数料", bal:"74670", memo:"振込手数料" },
+      { date:"2024-01-05", pay:"", dep:"40000", desc:"振込１　キフキン", bal:"114670", memo:"寄付金受領" },
+      { date:"2024-01-09", pay:"8500", dep:"", desc:"カ－ド　コウツウヒ", bal:"106170", memo:"ボランティア交通費" },
+      { date:"2024-01-12", pay:"22000", dep:"", desc:"振込ＩＢ２　チイキコウリュウ", bal:"84170", memo:"地域交流イベント運営費" },
+      { date:"2024-01-18", pay:"", dep:"20000", desc:"振込１　カイヒ", bal:"104170", memo:"会費収入" },
+      { date:"2024-01-22", pay:"15000", dep:"", desc:"振込ＩＢ２　シセツイジ", bal:"89170", memo:"施設維持管理費" },
+      { date:"2024-01-28", pay:"9800", dep:"", desc:"カ－ド　ウエブサイト", bal:"79370", memo:"ウェブサイト維持管理費" },
+      { date:"2024-02-02", pay:"", dep:"35000", desc:"振込１　イベントサンカヒ", bal:"114370", memo:"イベント参加費収入" },
+      { date:"2024-02-08", pay:"28000", dep:"", desc:"振込ＩＢ２　レキシテキマチナミ", bal:"86370", memo:"歴史的まち並み保全活動費" },
+      { date:"2024-02-14", pay:"6500", dep:"", desc:"カ－ド　コウツウヒ", bal:"79870", memo:"ボランティア交通費" },
+      { date:"2024-02-20", pay:"", dep:"45000", desc:"振込１　キフキン", bal:"124870", memo:"寄付金受領" },
+      { date:"2024-02-26", pay:"11000", dep:"", desc:"振込ＩＢ２　チラシインサツ", bal:"113870", memo:"広報資料・チラシ印刷費" },
+      { date:"2024-03-01", pay:"330", dep:"", desc:"手数料", bal:"113540", memo:"銀行手数料" },
+      { date:"2024-03-04", pay:"", dep:"15000", desc:"振込１　カイヒ", bal:"128540", memo:"会費収入" },
     ];
 
     let rows = structuredClone(defaultRows);
@@ -505,6 +581,21 @@
       return `${num.toLocaleString("ja-JP")}円`;
     };
 
+
+
+    const escapeHtml = (value) => String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+
+    const formatTableAmount = (value, digitClassName) => {
+      if (value === null || value === undefined || String(value).trim() === "") return "";
+      const num = Number(String(value).replace(/,/g, ""));
+      if (Number.isNaN(num)) return escapeHtml(value);
+      return `<span class="${digitClassName}">${num.toLocaleString("ja-JP")}</span><span class="amount-yen">円</span>`;
+    };
+
     const getFormData = () => {
       const data = {};
       fields.forEach(id => data[id] = document.getElementById(id).value);
@@ -524,6 +615,26 @@
       const out = [];
       for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
       return out.length ? out : [[]];
+    };
+
+
+    const renderExplanation = (d) => {
+      const title = d["f-explain-title"] || "90-day bank transaction explanation";
+      const body = d["f-explain-body"] || "";
+      const org = d["f-org-name"] || "";
+      const num = d["f-org-number"] || "";
+      const addr = d["f-org-address"] || "";
+      return `
+        <section class="explain-sheet">
+          <h2 class="font-w6">${title}</h2>
+          <div class="explain-meta font-w3">
+            <div><strong>Organization name:</strong> ${org}</div>
+            <div><strong>Corporate number:</strong> ${num}</div>
+            <div><strong>Address:</strong> ${addr}</div>
+          </div>
+          <div class="explain-body font-w3">${body.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
+        </section>
+      `;
     };
 
     const renderHeader = (d) => {
@@ -561,7 +672,7 @@
         <div class="doc-bottom">
           <div class="summary-card">
             <div class="summary-left font-w6 text-96">${d["f-branch-name"]}　${d["f-account-type"]} ${d["f-account-no"]}</div>
-            <div class="summary-center font-w6 text-96">お預り金額合計：</div>
+            <div class="summary-center font-w3 text-96">お預り金額合計：</div>
             <div class="summary-amount font-amount text-96">${formatYen(d["f-total-deposit"])}</div>
           </div>
           <div class="legal font-w3 text-96">
@@ -588,10 +699,10 @@
       const date = formatJPDateLines(row.date);
       return `<tr>
         <td class="col-date date-cell"><span class="date-y">${date.y}</span><span class="date-md">${date.md}</span></td>
-        <td class="col-pay num">${formatYen(row.pay)}</td>
-        <td class="col-dep num">${formatYen(row.dep)}</td>
+        <td class="col-pay num">${formatTableAmount(row.pay, "amount-digits-strong")}</td>
+        <td class="col-dep num">${formatTableAmount(row.dep, "amount-digits-strong")}</td>
         <td class="col-desc">${row.desc || ""}</td>
-        <td class="col-bal num">${formatYen(row.bal)}</td>
+        <td class="col-bal num">${formatTableAmount(row.bal, "amount-digits-balance")}</td>
         <td class="col-memo">${row.memo || ""}</td>
       </tr>`;
     }).join("");
@@ -601,19 +712,19 @@
       list.innerHTML = rows.map((row, idx) => `
         <div class="tx-editor" data-idx="${idx}">
           <div class="row-2">
-            <div><div class="mini-label">日付</div><input type="text" class="date-input" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="2024-01-02" data-key="date" value="${row.date||""}" /></div>
-            <div><div class="mini-label">差引残高</div><input type="text" data-key="bal" value="${row.bal||""}" /></div>
+            <div><div class="mini-label" data-ja="日付" data-zh="日期">日付</div><input type="text" class="date-input" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="2024-01-02" data-key="date" value="${row.date||""}" /></div>
+            <div><div class="mini-label" data-ja="差引残高" data-zh="账户余额">差引残高</div><input type="text" data-key="bal" value="${row.bal||""}" /></div>
           </div>
           <div class="row-3">
-            <div><div class="mini-label">お支払い</div><input type="text" data-key="pay" value="${row.pay||""}" /></div>
-            <div><div class="mini-label">お預かり</div><input type="text" data-key="dep" value="${row.dep||""}" /></div>
-            <div><div class="mini-label">メモ</div><input type="text" data-key="memo" value="${row.memo||""}" /></div>
+            <div><div class="mini-label" data-ja="お支払い" data-zh="支出">お支払い</div><input type="text" data-key="pay" value="${row.pay||""}" /></div>
+            <div><div class="mini-label" data-ja="お預かり" data-zh="收入">お預かり</div><input type="text" data-key="dep" value="${row.dep||""}" /></div>
+            <div><div class="mini-label" data-ja="メモ" data-zh="备注">メモ</div><input type="text" data-key="memo" value="${row.memo||""}" /></div>
           </div>
-          <div><div class="mini-label">お取引内容</div><input type="text" data-key="desc" value="${row.desc||""}" /></div>
+          <div><div class="mini-label" data-ja="お取引内容" data-zh="交易内容">お取引内容</div><input type="text" data-key="desc" value="${row.desc||""}" /></div>
           <div class="tx-actions">
             <button type="button" data-action="up">↑</button>
             <button type="button" data-action="down">↓</button>
-            <button type="button" data-action="delete">削除</button>
+            <button type="button" data-action="delete" data-ja="削除" data-zh="删除">削除</button>
           </div>
         </div>
       `).join("");
@@ -633,6 +744,7 @@
           });
         });
       });
+      applyPanelLanguage(currentPanelLang);
     };
 
     const renderPreview = () => {
@@ -684,8 +796,8 @@
       document.getElementById(id).addEventListener("change", renderPreview);
     });
 
-    document.getElementById("f-now-date").value = "2024-04-05";
-    document.getElementById("f-print-date").value = "2024-04-05";
+    document.getElementById("f-now-date").value = "2024-03-05";
+    document.getElementById("f-print-date").value = "2024-03-05";
 
     document.getElementById("btn-add-row").addEventListener("click", () => {
       rows.push({ date: todayISO(), pay:"", dep:"", desc:"", bal:"", memo:"" });
@@ -711,13 +823,36 @@
         if (el.tagName === "SELECT") el.selectedIndex = 0;
         else el.value = el.defaultValue;
       });
-      document.getElementById("f-now-date").value = "2024-04-05";
-      document.getElementById("f-print-date").value = "2024-04-05";
+      document.getElementById("f-now-date").value = "2024-03-05";
+      document.getElementById("f-print-date").value = "2024-03-05";
       renderTxEditors(); renderPreview();
     });
 
+
+    let currentPanelLang = "ja";
+    const applyPanelLanguage = (lang) => {
+      currentPanelLang = lang;
+      document.documentElement.setAttribute("lang", lang);
+      document.querySelectorAll("[data-ja][data-zh]").forEach(element => {
+        element.textContent = element.dataset[lang] || element.dataset.ja || "";
+      });
+      document.querySelectorAll("#lang-toggle button").forEach(button => {
+        button.classList.toggle("active", button.dataset.lang === lang);
+      });
+      try { localStorage.setItem("mufg-lang", lang); } catch (error) {}
+    };
+    document.querySelectorAll("#lang-toggle button").forEach(button => {
+      button.addEventListener("click", () => applyPanelLanguage(button.dataset.lang));
+    });
+    try {
+      const savedLang = localStorage.getItem("mufg-lang");
+      if (savedLang === "zh" || savedLang === "ja") currentPanelLang = savedLang;
+    } catch (error) {}
+
     renderTxEditors();
     renderPreview();
+    applyPanelLanguage(currentPanelLang);
+
   </script>
 </body>
 </html>
