@@ -529,7 +529,7 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "mufg-statement-template-v6-period";
+    const STORAGE_KEY = "mufg-statement-template-v7-period-all-days";
 
 
     const defaultRows = [
@@ -789,35 +789,51 @@
 
     const regenerateRowsForPeriod = (opts) => {
       const silent = !!(opts && opts.silent);
-      const startDateValue = document.getElementById("f-period-start")?.value;
-      const endDateValue = document.getElementById("f-period-end")?.value;
-      const startDateParts = String(startDateValue || "").split("-").map(Number);
-      const endDateParts = String(endDateValue || "").split("-").map(Number);
-      if (startDateParts.length !== 3 || endDateParts.length !== 3) return;
-      if (startDateParts.some(isNaN) || endDateParts.some(isNaN)) return;
+      const startDateValue = (document.getElementById("f-period-start") || {}).value || "";
+      const endDateValue = (document.getElementById("f-period-end") || {}).value || "";
+      const startDateParts = String(startDateValue).trim().split("-").map(Number);
+      const endDateParts = String(endDateValue).trim().split("-").map(Number);
+      if (startDateParts.length !== 3 || endDateParts.length !== 3) return false;
+      if (startDateParts.some((n) => Number.isNaN(n)) || endDateParts.some((n) => Number.isNaN(n))) return false;
 
       const startDate = new Date(startDateParts[0], startDateParts[1] - 1, startDateParts[2]);
       const endDate = new Date(endDateParts[0], endDateParts[1] - 1, endDateParts[2]);
-      if (isNaN(startDate) || isNaN(endDate)) return;
-      if (startDate > endDate) return;
+      if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return false;
+      if (startDate > endDate) return false;
+
+      // Guard against accidental huge ranges.
+      const dayCount = Math.floor((endDate - startDate) / 86400000) + 1;
+      if (dayCount > 400) return false;
 
       const isoFor = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
       const existingRowsByDate = {};
-      rows.forEach((row) => {
+      (rows || []).forEach((row) => {
         if (row && row.date) existingRowsByDate[row.date] = row;
       });
 
       const generatedRows = [];
-      const cursorDate = new Date(startDate);
+      const cursorDate = new Date(startDate.getTime());
       let runningBalance = 0;
       while (cursorDate <= endDate) {
         const isoDate = isoFor(cursorDate);
         const existingRow = existingRowsByDate[isoDate];
         if (existingRow) {
-          let parsedBalance = Number(String(existingRow.bal || "").replace(/,/g, ""));
-          if (!Number.isNaN(parsedBalance)) runningBalance = parsedBalance;
-          else existingRow.bal = String(runningBalance);
-          generatedRows.push(structuredClone(existingRow));
+          const payNum = Number(String(existingRow.pay || "").replace(/,/g, "")) || 0;
+          const depNum = Number(String(existingRow.dep || "").replace(/,/g, "")) || 0;
+          const existingBal = Number(String(existingRow.bal || "").replace(/,/g, ""));
+          if (!Number.isNaN(existingBal) && String(existingRow.bal || "").trim() !== "") {
+            runningBalance = existingBal;
+          } else {
+            runningBalance = runningBalance + depNum - payNum;
+          }
+          generatedRows.push({
+            date: isoDate,
+            pay: existingRow.pay || "",
+            dep: existingRow.dep || "",
+            desc: existingRow.desc || "",
+            bal: String(runningBalance),
+            memo: existingRow.memo || "",
+          });
         } else {
           generatedRows.push({
             date: isoDate,
@@ -836,7 +852,9 @@
         renderTxEditors();
         renderPreview();
       }
+      return true;
     };
+
 
     fields.forEach(id => {
       const fieldElement = document.getElementById(id);
@@ -1016,6 +1034,25 @@
     });
 
 
+
+    const bindPeriodRegeneration = () => {
+      const periodStartField = document.getElementById("f-period-start");
+      const periodEndField = document.getElementById("f-period-end");
+      if (!periodStartField || !periodEndField) return;
+      const triggerRegenerate = () => {
+        try {
+          regenerateRowsForPeriod();
+        } catch (error) {
+          console.error(error);
+        }
+      };
+      periodStartField.addEventListener("change", triggerRegenerate);
+      periodEndField.addEventListener("change", triggerRegenerate);
+      // Also regenerate when user finishes typing a full ISO date.
+      periodStartField.addEventListener("blur", triggerRegenerate);
+      periodEndField.addEventListener("blur", triggerRegenerate);
+    };
+
     let currentPanelLang = "ja";
     const applyPanelLanguage = (lang) => {
       currentPanelLang = lang;
@@ -1035,9 +1072,8 @@
       const savedLang = localStorage.getItem("mufg-lang");
       if (savedLang === "zh" || savedLang === "ja") currentPanelLang = savedLang;
     } catch (error) {}
-
-    bindPeriodRegeneration();
-    regenerateRowsForPeriod({ silent: true });
+    try { bindPeriodRegeneration(); } catch (error) { console.error(error); }
+    try { regenerateRowsForPeriod({ silent: true }); } catch (error) { console.error(error); }
     renderTxEditors();
     renderPreview();
     applyPanelLanguage(currentPanelLang);
