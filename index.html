@@ -123,9 +123,22 @@
       margin: 0 auto 20px;
       background: #fff;
       box-shadow: 0 1px 8px rgba(0,0,0,.15);
-      padding: 7mm 6.5mm 12mm;
+      padding: 7mm 6.5mm 8mm;
       position: relative;
       color: #111;
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    .sheet-body {
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+
+    .sheet .tx-table {
+      flex: 0 0 auto;
     }
 
     .doc-top { margin-bottom: 6px; }
@@ -291,10 +304,9 @@
     .date-cell .date-md { display: block; padding-left: 1.2em; }
 
     .footer {
-      position: absolute;
-      left: 7mm;
-      right: 7mm;
-      bottom: 5mm;
+      position: static;
+      margin-top: auto;
+      padding-top: 6mm;
       display: flex;
       justify-content: space-between;
       align-items: baseline;
@@ -312,7 +324,7 @@
 
     .doc-bottom {
       margin-top: 8px;
-      padding-bottom: 14mm;
+      padding-bottom: 2mm;
     }
 
     .text-96 {
@@ -420,17 +432,33 @@
     }
 
     @media print {
+      @page {
+        size: A4;
+        margin: 8mm;
+      }
       body { background: #fff; }
       .panel { display: none !important; }
-      .preview-wrap { padding: 0; background: #fff; }
+      .preview-wrap { padding: 0 !important; background: #fff !important; overflow: visible !important; }
       .sheet {
-        box-shadow: none;
-        margin: 0;
-        width: auto;
-        min-height: auto;
+        box-shadow: none !important;
+        margin: 0 !important;
+        width: auto !important;
+        min-height: auto !important;
+        height: auto !important;
+        max-height: none !important;
+        padding: 0 !important;
         page-break-after: always;
+        break-after: page;
+        overflow: visible !important;
       }
-      .sheet:last-child { page-break-after: auto; }
+      .sheet:last-child {
+        page-break-after: auto;
+        break-after: auto;
+      }
+      .footer {
+        position: static !important;
+        margin-top: 8mm !important;
+      }
     }
   </style>
 </head>
@@ -480,7 +508,7 @@
       <div class="group"><label data-ja="フッター URL" data-zh="页脚 URL">フッター URL</label><input id="f-url" type="text" value="https://direct11.bk.mufg.jp/ib/dfw/APL/bnkib/banking" /></div>
       <div class="group"><label data-ja="お預り金額合計" data-zh="收款金额合计">お預り金額合計</label><input id="f-total-deposit" type="text" value="128540" /></div>
       <div class="group"><label data-ja="Copyright 年" data-zh="版权年份">Copyright 年</label><input id="f-copyright-year" type="text" value="2024" /></div>
-      <div class="group"><label data-ja="1ページ行数（第1ページ）" data-zh="每页行数（第1页）">1ページ行数（第1ページ）</label><input id="f-rows-per-page" type="number" min="8" max="20" value="14" /></div>
+      <div class="group"><label data-ja="1ページ行数（第1ページ）" data-zh="每页行数（第1页）">1ページ行数（第1ページ）</label><input id="f-rows-per-page" type="number" min="8" max="24" value="18" /></div>
 
 
       <h2 style="font-size:13px;margin:14px 0 6px;" data-ja="取引明細" data-zh="交易明细">取引明細</h2>
@@ -708,10 +736,20 @@
       applyPanelLanguage(currentPanelLang);
     };
 
+    const padRowsToCapacity = (pageRows, capacity) => {
+      const filledRows = pageRows.slice();
+      while (filledRows.length < capacity) {
+        filledRows.push({ date:"", pay:"", dep:"", desc:"", bal:"", memo:"" });
+      }
+      return filledRows;
+    };
+
     const renderPreview = () => {
       const d = getFormData();
-      const firstPageRows = Math.max(8, Number(d["f-rows-per-page"]) || 14);
-      const otherPageRows = 20;
+      // First page has header so fewer rows than continuation pages.
+      // Default 18 fills the first sheet better; continuation pages use more rows.
+      const firstPageRows = Math.max(8, Math.min(24, Number(d["f-rows-per-page"]) || 18));
+      const otherPageRows = 24;
       const pages = [];
       if (rows.length === 0) {
         pages.push([]);
@@ -731,21 +769,26 @@
       document.getElementById("preview").innerHTML = pages.map((pageRows, pageIdx) => {
         const isFirst = pageIdx === 0;
         const isLast = pageIdx === totalPages - 1;
+        const capacity = isFirst ? firstPageRows : otherPageRows;
+        const displayRows = padRowsToCapacity(pageRows, capacity);
         const header = isFirst ? renderHeader(d) : "";
-        const tableHead = isFirst ? renderTableHead() : "";
+        // Keep table header on every page for readability and stable layout.
+        const tableHead = renderTableHead();
         const summary = isLast ? renderBottom(d) : "";
         const pageNum = d["f-page-num"] ? Number(d["f-page-num"]) : pageIdx + 1;
         const pageTotal = d["f-page-total"] ? Number(d["f-page-total"]) : totalPages;
 
         return `<section class="sheet">
-          ${header}
-          <table class="tx-table font-w3">${tableHead}<tbody>${renderRows(pageRows)}</tbody></table>
-          ${summary}
+          <div class="sheet-body">
+            ${header}
+            <table class="tx-table font-w3">${tableHead}<tbody>${renderRows(displayRows)}</tbody></table>
+            ${summary}
+          </div>
           <div class="footer">
             <span class="footer-url font-footer-url">${d["f-url"]}</span>
             <span class="footer-meta font-footer-url">
               <span class="footer-time">${printTime} ${printDate}</span>
-              <span class="footer-page">Trang ${pageNum} / ${pageTotal}</span>
+              <span class="footer-page">${pageNum} / ${pageTotal}</span>
             </span>
           </div>
         </section>`;
@@ -776,6 +819,7 @@
       }
 
       renderPreview();
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       if (document.fonts && document.fonts.ready) await document.fonts.ready;
 
       const sheets = Array.from(document.querySelectorAll(".sheet"));
@@ -783,34 +827,51 @@
         throw new Error(currentPanelLang === "zh" ? "没有可导出的预览页面" : "書き出すプレビューページがありません");
       }
 
+      // Capture each sheet at fixed A4-like size, one image per PDF page.
       const pdf = new jsPDFClass({ orientation: "portrait", unit: "mm", format: "a4" });
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
 
       for (const [sheetIndex, sheetElement] of sheets.entries()) {
         if (sheetIndex > 0) pdf.addPage();
-        const originalBoxShadow = sheetElement.style.boxShadow;
-        const originalMargin = sheetElement.style.margin;
+
+        const originalStyles = {
+          boxShadow: sheetElement.style.boxShadow,
+          margin: sheetElement.style.margin,
+          width: sheetElement.style.width,
+          minHeight: sheetElement.style.minHeight,
+          height: sheetElement.style.height,
+          overflow: sheetElement.style.overflow,
+        };
+
         sheetElement.style.boxShadow = "none";
         sheetElement.style.margin = "0";
+        sheetElement.style.width = "190mm";
+        sheetElement.style.minHeight = "277mm";
+        sheetElement.style.height = "277mm";
+        sheetElement.style.overflow = "hidden";
+
         const canvas = await html2canvasInstance(sheetElement, {
           backgroundColor: "#ffffff",
           scale: 2,
           useCORS: true,
           logging: false,
+          width: sheetElement.offsetWidth,
+          height: sheetElement.offsetHeight,
+          windowWidth: sheetElement.offsetWidth,
+          windowHeight: sheetElement.offsetHeight,
         });
-        sheetElement.style.boxShadow = originalBoxShadow;
-        sheetElement.style.margin = originalMargin;
 
+        sheetElement.style.boxShadow = originalStyles.boxShadow;
+        sheetElement.style.margin = originalStyles.margin;
+        sheetElement.style.width = originalStyles.width;
+        sheetElement.style.minHeight = originalStyles.minHeight;
+        sheetElement.style.height = originalStyles.height;
+        sheetElement.style.overflow = originalStyles.overflow;
+
+        // Always fit one sheet into exactly one A4 page to avoid multi-page bleed/overlap.
         const imageData = canvas.toDataURL("image/jpeg", 0.98);
-        let imageWidth = pageWidth;
-        let imageHeight = canvas.height * imageWidth / canvas.width;
-        if (imageHeight > pageHeight) {
-          imageHeight = pageHeight;
-          imageWidth = canvas.width * imageHeight / canvas.height;
-        }
-        const imageLeft = (pageWidth - imageWidth) / 2;
-        pdf.addImage(imageData, "JPEG", imageLeft, 0, imageWidth, imageHeight);
+        pdf.addImage(imageData, "JPEG", 0, 0, pageWidth, pageHeight);
       }
 
       pdf.save(buildPdfFileName());
