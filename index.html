@@ -254,9 +254,9 @@
     }
 
     .tx-table td.num {
-      font-family: "Hiragino Kaku Gothic Pro", "Hiragino Kaku Gothic ProN", "HiraKakuPro-W3", "Yu Gothic", "Meiryo", sans-serif;
-      font-weight: 300;
-      font-size: 8.8pt;
+      text-align: right;
+      white-space: nowrap;
+      padding-right: 4px;
     }
 
     .tx-table .amount-digits-strong {
@@ -271,7 +271,13 @@
       font-size: 9.6pt;
     }
 
-    .tx-table .amount-yen {
+    .tx-table .amount-yen-strong {
+      font-family: "Hiragino Kaku Gothic Pro", "Hiragino Kaku Gothic ProN", "HiraKakuPro-W6", "Yu Gothic", "Meiryo", sans-serif;
+      font-weight: 600;
+      font-size: 8.8pt;
+    }
+
+    .tx-table .amount-yen-balance {
       font-family: "Hiragino Kaku Gothic Pro", "Hiragino Kaku Gothic ProN", "HiraKakuPro-W3", "Yu Gothic", "Meiryo", sans-serif;
       font-weight: 300;
       font-size: 8.8pt;
@@ -589,11 +595,11 @@ Please let us know if any additional supporting documents are required.</textare
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
 
-    const formatTableAmount = (value, digitClassName) => {
+    const formatTableAmount = (value, digitClassName, yenClassName) => {
       if (value === null || value === undefined || String(value).trim() === "") return "";
       const num = Number(String(value).replace(/,/g, ""));
       if (Number.isNaN(num)) return escapeHtml(value);
-      return `<span class="${digitClassName}">${num.toLocaleString("ja-JP")}</span><span class="amount-yen">円</span>`;
+      return `<span class="${digitClassName}">${num.toLocaleString("ja-JP")}</span><span class="${yenClassName}">円</span>`;
     };
 
     const getFormData = () => {
@@ -699,10 +705,10 @@ Please let us know if any additional supporting documents are required.</textare
       const date = formatJPDateLines(row.date);
       return `<tr>
         <td class="col-date date-cell"><span class="date-y">${date.y}</span><span class="date-md">${date.md}</span></td>
-        <td class="col-pay num">${formatTableAmount(row.pay, "amount-digits-strong")}</td>
-        <td class="col-dep num">${formatTableAmount(row.dep, "amount-digits-strong")}</td>
+        <td class="col-pay num">${formatTableAmount(row.pay, "amount-digits-strong", "amount-yen-strong")}</td>
+        <td class="col-dep num">${formatTableAmount(row.dep, "amount-digits-strong", "amount-yen-strong")}</td>
         <td class="col-desc">${row.desc || ""}</td>
-        <td class="col-bal num">${formatTableAmount(row.bal, "amount-digits-balance")}</td>
+        <td class="col-bal num">${formatTableAmount(row.bal, "amount-digits-balance", "amount-yen-balance")}</td>
         <td class="col-memo">${row.memo || ""}</td>
       </tr>`;
     }).join("");
