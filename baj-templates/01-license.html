@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>運転免許証 編集</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;background:#d8d8d8;color:#111}
+    .app{display:grid;grid-template-columns:320px 1fr;min-height:100vh}
+    .panel{background:#fff;border-right:1px solid #ccc;padding:14px;overflow:auto;position:sticky;top:0;height:100vh}
+    .panel h1{font-size:15px;margin:0 0 6px}
+    .hint{font-size:11px;color:#666;line-height:1.45;margin:0 0 12px}
+    .back{display:inline-block;margin-bottom:10px;font-size:12px;color:#06c}
+    .group{margin-bottom:8px}
+    .group label{display:block;font-size:11px;font-weight:700;margin-bottom:3px}
+    .group input,.group textarea{width:100%;padding:6px 8px;border:1px solid #bbb;border-radius:3px;font:inherit;font-size:12px}
+    .group textarea{min-height:56px;resize:vertical}
+    .row-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid #eee}
+    button{border:1px solid #aaa;background:#fff;padding:7px 10px;border-radius:3px;cursor:pointer;font:inherit;font-size:12px}
+    button.primary{background:#0a66c2;color:#fff;border-color:#0a66c2}
+    .status{margin-top:8px;font-size:12px;color:#067d17;min-height:18px}
+    .preview-wrap{padding:20px;overflow:auto}
+    .sheet{position:relative;width:min(100%,210mm);margin:0 auto;background:#fff;box-shadow:0 1px 8px rgba(0,0,0,.15);overflow:hidden}
+    .sheet img.bg{display:block;width:100%;height:auto;user-select:none;pointer-events:none}
+    .field{position:absolute;border:1px dashed transparent;background:transparent;font:inherit;color:#111;padding:0 2px;margin:0;outline:none;white-space:pre-wrap;overflow:hidden;line-height:1.15}
+    .field:hover,.field:focus{border-color:rgba(10,102,194,.55);background:rgba(255,255,255,.4)}
+    .field.bold{font-weight:700}
+    .field.small{font-size:12px}
+    .field.xs{font-size:10px}
+    .field.center{text-align:center}
+    .field.photo{object-fit:cover;padding:0;border:0;background:#cfe3f5}
+    @media print{body{background:#fff}.panel{display:none!important}.preview-wrap{padding:0}.sheet{box-shadow:none}.field{border-color:transparent!important;background:transparent!important}}
+    @media(max-width:1000px){.app{grid-template-columns:1fr}.panel{position:static;height:auto}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="panel">
+      <a class="back" href="./index.html">← 模板列表</a>
+      <h1>運転免許証</h1>
+      <p class="hint">左侧改字段，右侧原版背景上实时覆盖。可直接保存 PDF / 打印。</p>
+
+      <div class="group"><label>氏名</label><input id="f-name" value="正治　新石" /></div>
+      <div class="group"><label>右上 生年月日</label><input id="f-birth-top" value="昭和40年3月10日" /></div>
+      <div class="group"><label>生年月日(行)</label><input id="f-birth" value="昭和40年3月10日" /></div>
+      <div class="group"><label>条件等</label><input id="f-cond" value="眼鏡等" /></div>
+      <div class="row-2">
+        <div class="group"><label>交付コード</label><input id="f-issue-code" value="平10236" /></div>
+        <div class="group"><label>免許証番号</label><input id="f-license-no" value="第5011005001003号" /></div>
+      </div>
+      <div class="group"><label>有効期限</label><input id="f-expire" value="平22年年前方0から平25昭00日" /></div>
+      <div class="group"><label>条件(下)</label><input id="f-cond2" value="眼鏡等" /></div>
+      <div class="group"><label>住所1</label><input id="f-addr1" value="ブリッジ　エーシア　ジャパン" /></div>
+      <div class="group"><label>住所2</label><input id="f-addr2" value="南　新宿区西早稲田二丁目3番1号，新宿都" /></div>
+      <div class="group"><label>交付日</label><input id="f-issue-date" value="平成22年03月10日" /></div>
+      <div class="group"><label>有効区分</label><input id="f-valid" value="平22 平25 平00 60" /></div>
+      <div class="group"><label>発行日</label><input id="f-publish" value="平成22年03月10日" /></div>
+      <div class="group"><label>右下氏名</label><input id="f-name-small" value="正治 新石" /></div>
+      <div class="group"><label>写真URL/上传</label><input id="f-photo" value="" placeholder="可粘贴图片URL" /><input type="file" id="photo-file" accept="image/*" style="margin-top:6px" /></div>
+
+      <div class="actions">
+        <button type="button" class="primary" id="btn-pdf">保存 PDF</button>
+        <button type="button" id="btn-print">打印</button>
+        <button type="button" id="btn-save">导出JSON</button>
+        <button type="button" id="btn-load">读取JSON</button>
+        <button type="button" id="btn-reset">重置</button>
+      </div>
+      <div class="status" id="status"></div>
+    </aside>
+
+    <main class="preview-wrap">
+      <section class="sheet" id="sheet">
+        <img class="bg" src="assets/page1.png" alt="license background" />
+        <div class="field bold" contenteditable="true" id="ov-name" data-key="name" style="top:7.2%;left:13.5%;width:42%;height:7%"></div>
+        <div class="field small" contenteditable="true" id="ov-birth-top" data-key="birth-top" style="top:7.5%;left:68%;width:28%;height:6%"></div>
+        <div class="field small" contenteditable="true" id="ov-birth" data-key="birth" style="top:18.2%;left:13.5%;width:28%;height:5%"></div>
+        <div class="field small" contenteditable="true" id="ov-cond" data-key="cond" style="top:18.2%;left:43%;width:18%;height:5%"></div>
+        <div class="field xs" contenteditable="true" id="ov-issue-code" data-key="issue-code" style="top:25.8%;left:13.5%;width:16%;height:5%"></div>
+        <div class="field xs" contenteditable="true" id="ov-license-no" data-key="license-no" style="top:25.8%;left:37%;width:34%;height:5%"></div>
+        <div class="field small bold" contenteditable="true" id="ov-expire" data-key="expire" style="top:33.5%;left:13.5%;width:48%;height:6%"></div>
+        <div class="field small" contenteditable="true" id="ov-cond2" data-key="cond2" style="top:42.5%;left:13.5%;width:18%;height:5%"></div>
+        <div class="field small" contenteditable="true" id="ov-addr1" data-key="addr1" style="top:53.5%;left:13.5%;width:50%;height:5%"></div>
+        <div class="field xs" contenteditable="true" id="ov-addr2" data-key="addr2" style="top:62.5%;left:13.5%;width:52%;height:6%"></div>
+        <div class="field xs" contenteditable="true" id="ov-issue-date" data-key="issue-date" style="top:73.5%;left:13.5%;width:28%;height:5%"></div>
+        <div class="field xs" contenteditable="true" id="ov-valid" data-key="valid" style="top:73.5%;left:46%;width:22%;height:5%"></div>
+        <div class="field xs" contenteditable="true" id="ov-publish" data-key="publish" style="top:81.5%;left:13.5%;width:28%;height:5%"></div>
+        <img class="field photo" id="ov-photo" data-key="photo" style="top:30%;left:74%;width:20%;height:42%" alt="photo" />
+        <div class="field xs center" contenteditable="true" id="ov-name-small" data-key="name-small" style="top:78%;left:74%;width:20%;height:5%"></div>
+      </section>
+    </main>
+  </div>
+  <script>
+    const STORAGE_KEY = "baj-license-v1";
+    const KEYS = ["name","birth-top","birth","cond","issue-code","license-no","expire","cond2","addr1","addr2","issue-date","valid","publish","photo","name-small"];
+    const defaults = {
+      name:"正治　新石", "birth-top":"昭和40年3月10日", birth:"昭和40年3月10日", cond:"眼鏡等",
+      "issue-code":"平10236", "license-no":"第5011005001003号", expire:"平22年年前方0から平25昭00日",
+      cond2:"眼鏡等", addr1:"ブリッジ　エーシア　ジャパン", addr2:"南　新宿区西早稲田二丁目3番1号，新宿都",
+      "issue-date":"平成22年03月10日", valid:"平22 平25 平00 60", publish:"平成22年03月10日",
+      photo:"", "name-small":"正治 新石"
+    };
+    const setStatus = (m, err=false) => { const el=document.getElementById("status"); el.textContent=m||""; el.style.color=err?"#c00":"#067d17"; };
+    const syncToOverlay = () => {
+      KEYS.forEach(k => {
+        const input = document.getElementById("f-"+k);
+        const ov = document.getElementById("ov-"+k);
+        if (!input || !ov) return;
+        if (ov.tagName === "IMG") ov.src = input.value || "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+        else ov.textContent = input.value || "";
+      });
+    };
+    const syncFromOverlay = (k) => {
+      const input = document.getElementById("f-"+k);
+      const ov = document.getElementById("ov-"+k);
+      if (!input || !ov) return;
+      if (ov.tagName === "IMG") input.value = ov.getAttribute("src") || "";
+      else input.value = ov.textContent || "";
+    };
+    const getData = () => { const d={}; KEYS.forEach(k=>{ const el=document.getElementById("f-"+k); if(el) d[k]=el.value; }); return d; };
+    const setData = (d) => { KEYS.forEach(k=>{ const el=document.getElementById("f-"+k); if(el && d[k]!==undefined) el.value=d[k]; }); syncToOverlay(); };
+    KEYS.forEach(k => {
+      const input = document.getElementById("f-"+k);
+      const ov = document.getElementById("ov-"+k);
+      if (input) { input.addEventListener("input", syncToOverlay); input.addEventListener("change", syncToOverlay); }
+      if (ov && ov.tagName !== "IMG") { ov.addEventListener("input", () => syncFromOverlay(k)); ov.addEventListener("blur", () => syncFromOverlay(k)); }
+    });
+    document.getElementById("photo-file").addEventListener("change", () => {
+      const file = document.getElementById("photo-file").files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => { document.getElementById("f-photo").value = reader.result; syncToOverlay(); };
+      reader.readAsDataURL(file);
+    });
+    document.getElementById("btn-print").onclick = () => window.print();
+    document.getElementById("btn-pdf").onclick = async () => {
+      try {
+        setStatus("正在生成 PDF...");
+        const sheet = document.getElementById("sheet");
+        const canvas = await html2canvas(sheet, { backgroundColor:"#ffffff", scale:2, useCORS:true });
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({ orientation:"landscape", unit:"mm", format:"a4" });
+        const pageW = pdf.internal.pageSize.getWidth();
+        const pageH = pdf.internal.pageSize.getHeight();
+        const ratio = Math.min(pageW / canvas.width, pageH / canvas.height);
+        const w = canvas.width * ratio, h = canvas.height * ratio;
+        pdf.addImage(canvas.toDataURL("image/jpeg", 0.98), "JPEG", (pageW-w)/2, (pageH-h)/2, w, h);
+        pdf.save("license.pdf");
+        setStatus("PDF 已保存");
+      } catch (e) { setStatus("PDF失败: "+e.message, true); alert(e.message); }
+    };
+    document.getElementById("btn-save").onclick = () => {
+      const data = getData();
+      const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
+      const a = document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="license.json"; a.click();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      setStatus("JSON 已导出");
+    };
+    document.getElementById("btn-load").onclick = () => {
+      const i=document.createElement("input"); i.type="file"; i.accept=".json,application/json";
+      i.onchange=()=>{ const f=i.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ setData(JSON.parse(r.result)); setStatus("JSON 已读取"); }; r.readAsText(f); };
+      i.click();
+    };
+    document.getElementById("btn-reset").onclick = () => { if(!confirm("重置？")) return; setData(defaults); setStatus("已重置"); };
+    try { const raw=localStorage.getItem(STORAGE_KEY); if(raw) setData(JSON.parse(raw)); else syncToOverlay(); } catch(e){ syncToOverlay(); }
+  </script>
+</body>
+</html>
