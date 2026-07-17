@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>履歴事項全部証明書 編集</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;background:#d8d8d8;color:#111}
+    .app{display:grid;grid-template-columns:340px 1fr;min-height:100vh}
+    .panel{background:#fff;border-right:1px solid #ccc;padding:14px;overflow:auto;position:sticky;top:0;height:100vh}
+    .panel h1{font-size:15px;margin:0 0 6px}
+    .hint{font-size:11px;color:#666;line-height:1.45;margin:0 0 12px}
+    .back{display:inline-block;margin-bottom:10px;font-size:12px;color:#06c}
+    .group{margin-bottom:8px}
+    .group label{display:block;font-size:11px;font-weight:700;margin-bottom:3px}
+    .group input,.group textarea{width:100%;padding:6px 8px;border:1px solid #bbb;border-radius:3px;font:inherit;font-size:12px}
+    .group textarea{min-height:90px;resize:vertical;line-height:1.4}
+    .actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid #eee}
+    button{border:1px solid #aaa;background:#fff;padding:7px 10px;border-radius:3px;cursor:pointer;font:inherit;font-size:12px}
+    button.primary{background:#0a66c2;color:#fff;border-color:#0a66c2}
+    .status{margin-top:8px;font-size:12px;color:#067d17;min-height:18px}
+    .preview-wrap{padding:20px;overflow:auto}
+    .sheet{position:relative;width:min(100%,190mm);margin:0 auto;background:#fff;box-shadow:0 1px 8px rgba(0,0,0,.15);overflow:hidden}
+    .sheet img.bg{display:block;width:100%;height:auto;user-select:none;pointer-events:none}
+    .field{position:absolute;border:1px dashed transparent;background:rgba(255,255,255,.55);font:inherit;color:#111;padding:1px 3px;margin:0;outline:none;white-space:pre-wrap;overflow:hidden;line-height:1.25}
+    .field:hover,.field:focus{border-color:rgba(10,102,194,.6);background:rgba(255,255,255,.85)}
+    .field.bold{font-weight:700}
+    .field.small{font-size:11px}
+    .field.xs{font-size:10px}
+    .field.center{text-align:center}
+    @media print{body{background:#fff}.panel{display:none!important}.preview-wrap{padding:0}.sheet{box-shadow:none}.field{border-color:transparent!important;background:transparent!important}}
+    @media(max-width:1000px){.app{grid-template-columns:1fr}.panel{position:static;height:auto}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="panel">
+      <a class="back" href="./index.html">← 模板列表</a>
+      <h1>履歴事項全部証明書</h1>
+      <p class="hint">从 4.pdf 提取背景图后叠可编辑字段。版式保持原件，仅文字字段可改。</p>
+
+      <div class="group"><label>所在地（标题下）</label><input id="f-header-addr" value="東京都渋谷区本町三丁目48番21-303号" /></div>
+      <div class="group"><label>法人名（标题下）</label><input id="f-header-org" value="特定非営利活動法人ブリッジ・アジア・ジャパン（Bridge Asia Japan）" /></div>
+      <div class="group"><label>会社法人等番号</label><input id="f-corp-no" value="5011005001003" /></div>
+      <div class="group"><label>名称</label><textarea id="f-name">特定非営利活動法人ブリッジ・アジア・ジャパン
+（Bridge Asia Japan）</textarea></div>
+      <div class="group"><label>主たる事務所</label><input id="f-office" value="東京都渋谷区本町三丁目48番21-303号" /></div>
+      <div class="group"><label>法人成立の年月日</label><input id="f-founded" value="平成28年4月4日" /></div>
+      <div class="group"><label>目的等</label><textarea id="f-purpose" style="min-height:140px">この法人は、アジア太平洋地域において、教育、環境、平和構築等の分野で、国界を越えた市民社会の協力と交流を推進し、持続可能で平和な社会の実現に寄与することを目的とする。
+この法人は、上記の目的を達成するため、次の事業を行う。
+(1) 環境・平和の平和分野の国際交流事業
+(2) 国際理解教育の推進事業
+(3) 地域社会の課題解決に向けた国際協力事業
+(4) 研究・調査・広業・政策提言事業
+(5) その他、この法人の目的を達成するために必要な又は補助的活動</textarea></div>
+      <div class="group"><label>役員に関する事項</label><textarea id="f-officers" style="min-height:120px">東京都渋谷区本町三丁目48番21-303号
+理事　中島 かおり
+東京都渋谷区本町三丁目48番21-303号
+理事　石川 治江
+東京都渋谷区本町三丁目48番21-303号
+理事　根本 悦子
+東京都渋谷区本町三丁目48番21-303号
+理事　Sejima Shunsuke</textarea></div>
+      <div class="group"><label>証明文</label><textarea id="f-cert-note">これは登記簿に記録されている閉鎖されていない事項の全部であることを証明した書面である。</textarea></div>
+      <div class="group"><label>証明日</label><input id="f-cert-date" value="平成28年 4月13日" /></div>
+      <div class="group"><label>登記官</label><input id="f-issuer" value="岡戸 嘉信" /></div>
+      <div class="group"><label>整理番号</label><input id="f-serial" value="T344310" /></div>
+      <div class="group"><label>页码</label><input id="f-page" value="1  5" /></div>
+
+      <div class="actions">
+        <button type="button" class="primary" id="btn-pdf">保存 PDF</button>
+        <button type="button" id="btn-print">打印</button>
+        <button type="button" id="btn-save">导出JSON</button>
+        <button type="button" id="btn-load">读取JSON</button>
+        <button type="button" id="btn-reset">重置</button>
+      </div>
+      <div class="status" id="status"></div>
+    </aside>
+
+    <main class="preview-wrap">
+      <section class="sheet" id="sheet">
+        <img class="bg" src="assets/page4.png" alt="corporate history background" />
+        <!-- editable overlays: percentages relative to sheet image -->
+        <div class="field xs center" contenteditable="true" id="ov-header-addr" data-key="header-addr" style="top:12.8%;left:18%;width:64%;height:2.6%"></div>
+        <div class="field xs center" contenteditable="true" id="ov-header-org" data-key="header-org" style="top:15.4%;left:14%;width:72%;height:2.8%"></div>
+        <div class="field bold" contenteditable="true" id="ov-corp-no" data-key="corp-no" style="top:21.8%;left:31%;width:48%;height:3.2%"></div>
+        <div class="field small" contenteditable="true" id="ov-name" data-key="name" style="top:26.2%;left:31%;width:52%;height:5.2%"></div>
+        <div class="field small" contenteditable="true" id="ov-office" data-key="office" style="top:32.8%;left:31%;width:52%;height:3.2%"></div>
+        <div class="field small" contenteditable="true" id="ov-founded" data-key="founded" style="top:37.3%;left:31%;width:40%;height:2.8%"></div>
+        <div class="field xs" contenteditable="true" id="ov-purpose" data-key="purpose" style="top:41.5%;left:31%;width:54%;height:22%"></div>
+        <div class="field xs" contenteditable="true" id="ov-officers" data-key="officers" style="top:64.5%;left:31%;width:54%;height:13.5%"></div>
+        <div class="field xs center" contenteditable="true" id="ov-cert-note" data-key="cert-note" style="top:79.5%;left:16%;width:58%;height:4%"></div>
+        <div class="field xs center" contenteditable="true" id="ov-cert-date" data-key="cert-date" style="top:85.2%;left:30%;width:30%;height:2.6%"></div>
+        <div class="field small" contenteditable="true" id="ov-issuer" data-key="issuer" style="top:90%;left:58%;width:24%;height:2.8%"></div>
+        <div class="field xs" contenteditable="true" id="ov-serial" data-key="serial" style="top:94.8%;left:18%;width:18%;height:2.2%"></div>
+        <div class="field xs" contenteditable="true" id="ov-page" data-key="page" style="top:94.8%;left:82%;width:8%;height:2.2%"></div>
+      </section>
+    </main>
+  </div>
+  <script>
+    const STORAGE_KEY = "baj-corporate-history-v1";
+    const KEYS = ["header-addr","header-org","corp-no","name","office","founded","purpose","officers","cert-note","cert-date","issuer","serial","page"];
+    const defaults = {
+      "header-addr":"東京都渋谷区本町三丁目48番21-303号",
+      "header-org":"特定非営利活動法人ブリッジ・アジア・ジャパン（Bridge Asia Japan）",
+      "corp-no":"5011005001003",
+      name:"特定非営利活動法人ブリッジ・アジア・ジャパン\n（Bridge Asia Japan）",
+      office:"東京都渋谷区本町三丁目48番21-303号",
+      founded:"平成28年4月4日",
+      purpose:"この法人は、アジア太平洋地域において、教育、環境、平和構築等の分野で、国界を越えた市民社会の協力と交流を推進し、持続可能で平和な社会の実現に寄与することを目的とする。\nこの法人は、上記の目的を達成するため、次の事業を行う。\n(1) 環境・平和の平和分野の国際交流事業\n(2) 国際理解教育の推進事業\n(3) 地域社会の課題解決に向けた国際協力事業\n(4) 研究・調査・広業・政策提言事業\n(5) その他、この法人の目的を達成するために必要な又は補助的活動",
+      officers:"東京都渋谷区本町三丁目48番21-303号\n理事　中島 かおり\n東京都渋谷区本町三丁目48番21-303号\n理事　石川 治江\n東京都渋谷区本町三丁目48番21-303号\n理事　根本 悦子\n東京都渋谷区本町三丁目48番21-303号\n理事　Sejima Shunsuke",
+      "cert-note":"これは登記簿に記録されている閉鎖されていない事項の全部であることを証明した書面である。",
+      "cert-date":"平成28年 4月13日",
+      issuer:"岡戸 嘉信",
+      serial:"T344310",
+      page:"1  5"
+    };
+    const setStatus=(m,err=false)=>{const el=document.getElementById("status");el.textContent=m||"";el.style.color=err?"#c00":"#067d17";};
+    const syncToOverlay=()=>{KEYS.forEach(k=>{const input=document.getElementById("f-"+k);const ov=document.getElementById("ov-"+k);if(!input||!ov)return;ov.textContent=input.value||"";});};
+    const syncFromOverlay=k=>{const input=document.getElementById("f-"+k);const ov=document.getElementById("ov-"+k);if(!input||!ov)return;input.value=ov.textContent||"";};
+    const getData=()=>{const d={};KEYS.forEach(k=>{const el=document.getElementById("f-"+k);if(el)d[k]=el.value;});return d;};
+    const setData=d=>{KEYS.forEach(k=>{const el=document.getElementById("f-"+k);if(el&&d[k]!==undefined)el.value=d[k];});syncToOverlay();};
+    KEYS.forEach(k=>{
+      const input=document.getElementById("f-"+k);
+      const ov=document.getElementById("ov-"+k);
+      if(input){input.addEventListener("input",syncToOverlay);input.addEventListener("change",syncToOverlay);}
+      if(ov){ov.addEventListener("input",()=>syncFromOverlay(k));ov.addEventListener("blur",()=>syncFromOverlay(k));}
+    });
+    document.getElementById("btn-print").onclick=()=>window.print();
+    document.getElementById("btn-pdf").onclick=async()=>{
+      try{
+        setStatus("正在生成 PDF...");
+        const sheet=document.getElementById("sheet");
+        const canvas=await html2canvas(sheet,{backgroundColor:"#ffffff",scale:2,useCORS:true});
+        const {jsPDF}=window.jspdf;
+        const pdf=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
+        const pageW=pdf.internal.pageSize.getWidth();
+        const pageH=pdf.internal.pageSize.getHeight();
+        const ratio=Math.min(pageW/canvas.width,pageH/canvas.height);
+        const w=canvas.width*ratio,h=canvas.height*ratio;
+        pdf.addImage(canvas.toDataURL("image/jpeg",0.98),"JPEG",(pageW-w)/2,(pageH-h)/2,w,h);
+        pdf.save("corporate-history.pdf");
+        setStatus("PDF 已保存");
+      }catch(e){setStatus("PDF失败: "+e.message,true);alert(e.message);}
+    };
+    document.getElementById("btn-save").onclick=()=>{
+      const data=getData();
+      const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+      const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="corporate-history.json";a.click();
+      localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+      setStatus("JSON 已导出");
+    };
+    document.getElementById("btn-load").onclick=()=>{
+      const i=document.createElement("input");i.type="file";i.accept=".json,application/json";
+      i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{setData(JSON.parse(r.result));setStatus("JSON 已读取");};r.readAsText(f);};
+      i.click();
+    };
+    document.getElementById("btn-reset").onclick=()=>{if(!confirm("重置？"))return;setData(defaults);setStatus("已重置");};
+    try{const raw=localStorage.getItem(STORAGE_KEY);if(raw)setData(JSON.parse(raw));else syncToOverlay();}catch(e){syncToOverlay();}
+  </script>
+</body>
+</html>
