@@ -4,20 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>履歴事項全部証明書 編集</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@500;600;700&amp;display=swap" rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
-    :root {
-      --line: #222;
-      --muted: #555;
-      --panel-bg: #fff;
-      --page-bg: #d8d8d8;
-    }
     * { box-sizing: border-box; }
     body {
       margin: 0;
       font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
-      background: var(--page-bg);
+      background: #d8d8d8;
       color: #111;
       font-size: 12px;
     }
@@ -27,7 +24,7 @@
       min-height: 100vh;
     }
     .panel {
-      background: var(--panel-bg);
+      background: #fff;
       border-right: 1px solid #ccc;
       padding: 14px;
       overflow: auto;
@@ -69,179 +66,102 @@
     button.primary { background: #0a66c2; color: #fff; border-color: #0a66c2; }
     .status { margin-top: 8px; font-size: 12px; color: #067d17; min-height: 18px; }
     .preview-wrap { padding: 20px; overflow: auto; }
-
-    /* ===== Document sheet: pure HTML reconstruction ===== */
     .sheet {
-      width: min(100%, 190mm);
-      min-height: 277mm;
+      position: relative;
+      width: 190mm;
+      max-width: none;
       margin: 0 auto 20px;
-      background: #fff url("./assets/page4-deco.png") center / cover no-repeat;
+      background: #fff;
       box-shadow: 0 1px 8px rgba(0,0,0,.15);
-      padding: 14mm 12mm 12mm;
-      position: relative;
-      color: #111;
+      overflow: hidden;
     }
-    .sheet-inner {
-      background: rgba(255,255,255,.92);
-      border: 1px solid #cfcfcf;
-      padding: 10mm 8mm 8mm;
-      min-height: 245mm;
-      position: relative;
-    }
-    .doc-title {
-      text-align: center;
-      font-size: 20px;
-      font-weight: 700;
-      letter-spacing: 0.25em;
-      margin: 0 0 8px;
-    }
-    .doc-sub {
-      text-align: center;
-      font-size: 11px;
-      line-height: 1.55;
-      margin: 0 0 10px;
-      color: #222;
-    }
-    .doc-sub [contenteditable="true"] {
+    .sheet img.bg {
       display: block;
-      outline: none;
-      min-height: 1.2em;
-    }
-    .doc-sub [contenteditable="true"]:hover,
-    .doc-sub [contenteditable="true"]:focus {
-      background: rgba(10,102,194,.08);
-      box-shadow: inset 0 0 0 1px rgba(10,102,194,.25);
-    }
-
-    table.registry {
       width: 100%;
-      border-collapse: collapse;
-      table-layout: fixed;
-      font-size: 11px;
-      line-height: 1.45;
-      background: #fff;
+      height: auto;
+      user-select: none;
+      pointer-events: none;
     }
-    table.registry th,
-    table.registry td {
-      border: 1px solid var(--line);
-      vertical-align: top;
-      padding: 6px 8px;
+    .sheet img.seal {
+      position: absolute;
+      z-index: 5;
+      pointer-events: none;
+      user-select: none;
+      object-fit: contain;
+      opacity: 0.92;
     }
-    table.registry th {
-      width: 22%;
-      background: #fafafa;
-      font-weight: 700;
-      text-align: center;
-      white-space: nowrap;
-    }
-    table.registry td {
-      width: 78%;
-      background: #fff;
-    }
-    table.registry .editable {
+    .field {
+      position: absolute;
+      border: 1px dashed transparent;
+      background: transparent;
+      color: #111;
+      margin: 0;
+      padding: 0 3px;
       outline: none;
-      min-height: 1.2em;
+      overflow: hidden;
       white-space: pre-wrap;
       word-break: break-word;
-    }
-    table.registry .editable:hover,
-    table.registry .editable:focus {
-      background: rgba(10,102,194,.06);
-      box-shadow: inset 0 0 0 1px rgba(10,102,194,.25);
-    }
-    table.registry .purpose {
-      min-height: 120px;
-    }
-    table.registry .officers {
-      min-height: 90px;
-    }
-    table.registry .corp-no {
-      font-size: 18px;
+      line-height: 1.22;
+      font-family: "Noto Sans JP", "Yu Gothic", sans-serif;
+      font-size: 14.5px;
       font-weight: 700;
-      letter-spacing: 0.04em;
     }
-
-    .cert-block {
-      margin-top: 12px;
-      text-align: center;
-      font-size: 11px;
-      line-height: 1.7;
+    .field:hover, .field:focus {
+      border-color: rgba(10,102,194,.55);
+      background: rgba(255,255,255,.35);
     }
-    .cert-block .editable {
-      outline: none;
-      display: inline-block;
-      min-width: 40%;
-      white-space: pre-wrap;
-    }
-    .cert-block .editable:hover,
-    .cert-block .editable:focus {
-      background: rgba(10,102,194,.06);
-      box-shadow: inset 0 0 0 1px rgba(10,102,194,.25);
-    }
-    .cert-meta {
-      margin-top: 10px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      font-size: 11px;
-      text-align: center;
-    }
-    .issuer-line {
-      margin-top: 14px;
-      text-align: right;
-      font-size: 13px;
-      padding-right: 12%;
-    }
-    .issuer-line .editable {
-      outline: none;
-      display: inline-block;
-      min-width: 8em;
-      text-align: center;
-    }
-    .issuer-line .editable:hover,
-    .issuer-line .editable:focus {
-      background: rgba(10,102,194,.06);
-      box-shadow: inset 0 0 0 1px rgba(10,102,194,.25);
-    }
-    .footer-line {
-      margin-top: 18px;
+    .field.center { text-align: center; }
+    .field.corp-no {
+      font-family: "Noto Sans JP", Arial, sans-serif;
+      font-size: 20px;
+      font-weight: 500;
+      letter-spacing: 0;
       display: flex;
-      justify-content: space-between;
-      font-size: 10px;
-      color: #333;
-      border-top: 1px solid #ddd;
-      padding-top: 6px;
+      align-items: center;
     }
-    .footer-line .editable {
-      outline: none;
-      min-width: 4em;
+    .field.header {
+      text-align: left;
+      font-size: 14.5px;
+      font-weight: 700;
+      line-height: 1.18;
     }
-    .footer-line .editable:hover,
-    .footer-line .editable:focus {
-      background: rgba(10,102,194,.06);
+    .field.purpose {
+      font-size: 12.5px;
+      font-weight: 700;
+      line-height: 1.22;
     }
-    .note {
-      font-size: 10px;
-      color: #555;
-      margin-top: 4px;
+    .field.officers {
+      font-size: 13.5px;
+      font-weight: 700;
+      line-height: 1.22;
     }
+    .field.cert-note {
+      font-size: 10.5px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    .field.registry {
+      font-size: 11.5px;
+      font-weight: 700;
+    }
+    .field.issuer {
+      text-align: right;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+    }
+    .field.serial, .field.page {
+      font-size: 11.5px;
+      font-weight: 700;
+    }
+    .field.page { text-align: right; }
 
     @media print {
       body { background: #fff; }
       .panel { display: none !important; }
       .preview-wrap { padding: 0; }
-      .sheet {
-        box-shadow: none;
-        margin: 0;
-        width: auto;
-        min-height: auto;
-      }
-      .sheet-inner { border-color: #bbb; }
-      .editable:hover,
-      .editable:focus {
-        background: transparent !important;
-        box-shadow: none !important;
-      }
+      .sheet { box-shadow: none; margin: 0; width: 190mm; }
+      .field { border-color: transparent !important; background: transparent !important; }
     }
     @media (max-width: 1000px) {
       .app { grid-template-columns: 1fr; }
@@ -254,37 +174,22 @@
     <aside class="panel">
       <a class="back" href="./index.html">← 模板列表</a>
       <h1>履歴事項全部証明書</h1>
-      <p class="hint">方案二：表格与文字用 HTML 重绘，不再叠在原证件文字上。左侧改字段，右侧实时预览。</p>
+      <p class="hint">底版已清除可变文字，保留标题/表格线/栏目名/菊纹，并叠印两个红色法務局印章。左侧改字段，右侧实时预览。</p>
 
-      <div class="group"><label>所在地（标题下）</label><input id="f-header-addr" value="東京都渋谷区本町三丁目48番21-303号" /></div>
-      <div class="group"><label>法人名（标题下）</label><input id="f-header-org" value="特定非営利活動法人ブリッジ・アジア・ジャパン（Bridge Asia Japan）" /></div>
-      <div class="group"><label>会社法人等番号</label><input id="f-corp-no" value="5011005001003" /></div>
-      <div class="group"><label>名称</label><textarea id="f-name">特定非営利活動法人ブリッジ・アジア・ジャパン
-（Bridge Asia Japan）</textarea></div>
-      <div class="group"><label>主たる事務所</label><input id="f-office" value="東京都渋谷区本町三丁目48番21-303号" /></div>
-      <div class="group"><label>法人成立の年月日</label><input id="f-founded" value="平成28年4月4日" /></div>
-      <div class="group"><label>目的等</label><textarea id="f-purpose" style="min-height:150px">この法人は、アジア太平洋地域において、教育、環境、平和構築等の分野で、国界を越えた市民社会の協力と交流を推進し、持続可能で平和な社会の実現に寄与することを目的とする。
-この法人は、上記の目的を達成するため、次の事業を行う。
-(1) 環境・平和の平和分野の国際交流事業
-(2) 国際理解教育の推進事業
-(3) 地域社会の課題解決に向けた国際協力事業
-(4) 研究・調査・広業・政策提言事業
-(5) その他、この法人の目的を達成するために必要な又は補助的活動</textarea></div>
-      <div class="group"><label>役員に関する事項</label><textarea id="f-officers" style="min-height:130px">東京都渋谷区本町三丁目48番21-303号
-理事　中島 かおり
-東京都渋谷区本町三丁目48番21-303号
-理事　石川 治江
-東京都渋谷区本町三丁目48番21-303号
-理事　根本 悦子
-東京都渋谷区本町三丁目48番21-303号
-理事　Sejima Shunsuke</textarea></div>
-      <div class="group"><label>証明文</label><textarea id="f-cert-note">これは登記簿に記録されている閉鎖されていない事項の全部であることを証明した書面である。
-（東京法務局渋谷出張所管轄）</textarea></div>
-      <div class="group"><label>証明日</label><input id="f-cert-date" value="平成28年 4月13日" /></div>
-      <div class="group"><label>法務局/登記官</label><input id="f-registry" value="東京法務局渋谷出張所" /></div>
-      <div class="group"><label>登記官氏名</label><input id="f-issuer" value="岡戸 嘉信" /></div>
-      <div class="group"><label>整理番号</label><input id="f-serial" value="T344310" /></div>
-      <div class="group"><label>页码</label><input id="f-page" value="1 / 5" /></div>
+      <div class="group"><label>所在地（标题下）</label><input id="f-header-addr" /></div>
+      <div class="group"><label>法人名（标题下）</label><input id="f-header-org" /></div>
+      <div class="group"><label>会社法人等番号</label><input id="f-corp-no" /></div>
+      <div class="group"><label>名称</label><textarea id="f-name"></textarea></div>
+      <div class="group"><label>主たる事務所</label><input id="f-office" /></div>
+      <div class="group"><label>法人成立の年月日</label><input id="f-founded" /></div>
+      <div class="group"><label>目的等</label><textarea id="f-purpose" style="min-height:150px"></textarea></div>
+      <div class="group"><label>役員に関する事項</label><textarea id="f-officers" style="min-height:130px"></textarea></div>
+      <div class="group"><label>証明文</label><textarea id="f-cert-note"></textarea></div>
+      <div class="group"><label>証明日</label><input id="f-cert-date" /></div>
+      <div class="group"><label>法務局</label><input id="f-registry" /></div>
+      <div class="group"><label>登記官氏名</label><input id="f-issuer" /></div>
+      <div class="group"><label>整理番号</label><input id="f-serial" /></div>
+      <div class="group"><label>页码</label><input id="f-page" /></div>
 
       <div class="actions">
         <button type="button" class="primary" id="btn-pdf">保存 PDF</button>
@@ -298,67 +203,55 @@
 
     <main class="preview-wrap">
       <section class="sheet" id="sheet">
-        <div class="sheet-inner">
-          <h1 class="doc-title">履歴事項全部証明書</h1>
-          <div class="doc-sub">
-            <div class="editable" id="ov-header-addr" data-key="header-addr" contenteditable="true"></div>
-            <div class="editable" id="ov-header-org" data-key="header-org" contenteditable="true"></div>
-          </div>
+        <img class="bg" src="./assets/page4-clean.png" alt="corporate history clean background" />
 
-          <table class="registry">
-            <tr>
-              <th>会社法人等番号</th>
-              <td><div class="editable corp-no" id="ov-corp-no" data-key="corp-no" contenteditable="true"></div></td>
-            </tr>
-            <tr>
-              <th>名　称</th>
-              <td><div class="editable" id="ov-name" data-key="name" contenteditable="true"></div></td>
-            </tr>
-            <tr>
-              <th>主たる事務所</th>
-              <td><div class="editable" id="ov-office" data-key="office" contenteditable="true"></div></td>
-            </tr>
-            <tr>
-              <th>法人成立の年月日</th>
-              <td><div class="editable" id="ov-founded" data-key="founded" contenteditable="true"></div></td>
-            </tr>
-            <tr>
-              <th>目的等</th>
-              <td><div class="editable purpose" id="ov-purpose" data-key="purpose" contenteditable="true"></div></td>
-            </tr>
-            <tr>
-              <th>役員に関する事項</th>
-              <td><div class="editable officers" id="ov-officers" data-key="officers" contenteditable="true"></div></td>
-            </tr>
-          </table>
+        <!-- Positions derived from page4-geometry.json (1489x2105) -->
+        <div class="field header" contenteditable="true" id="ov-header-addr" data-key="header-addr"
+             style="left:18.4%;top:14.5%;width:73.9%;height:2.1%"></div>
+        <div class="field header" contenteditable="true" id="ov-header-org" data-key="header-org"
+             style="left:18.4%;top:16.2%;width:73.9%;height:2.5%"></div>
 
-          <div class="cert-block">
-            <div class="editable" id="ov-cert-note" data-key="cert-note" contenteditable="true"></div>
-            <div class="cert-meta">
-              <div class="editable" id="ov-cert-date" data-key="cert-date" contenteditable="true"></div>
-              <div class="editable" id="ov-registry" data-key="registry" contenteditable="true"></div>
-            </div>
-            <div class="issuer-line">
-              登記官
-              <span class="editable" id="ov-issuer" data-key="issuer" contenteditable="true"></span>
-            </div>
-          </div>
+        <div class="field corp-no" contenteditable="true" id="ov-corp-no" data-key="corp-no"
+             style="left:32.4%;top:19.5%;width:60.5%;height:4.3%"></div>
+        <div class="field" contenteditable="true" id="ov-name" data-key="name"
+             style="left:32.4%;top:24.8%;width:60.5%;height:4.1%"></div>
+        <div class="field" contenteditable="true" id="ov-office" data-key="office"
+             style="left:32.4%;top:29.7%;width:60.5%;height:2.3%"></div>
+        <div class="field" contenteditable="true" id="ov-founded" data-key="founded"
+             style="left:32.4%;top:32.8%;width:60.5%;height:2.2%"></div>
+        <div class="field purpose" contenteditable="true" id="ov-purpose" data-key="purpose"
+             style="left:32.4%;top:35.8%;width:60.5%;height:25.6%"></div>
+        <div class="field officers" contenteditable="true" id="ov-officers" data-key="officers"
+             style="left:32.4%;top:62.4%;width:60.5%;height:17.1%"></div>
 
-          <div class="footer-line">
-            <div>整理番号 <span class="editable" id="ov-serial" data-key="serial" contenteditable="true"></span></div>
-            <div class="editable" id="ov-page" data-key="page" contenteditable="true"></div>
-          </div>
-          <div class="note">※ 下線のあるものは抹消事項であることを示す。</div>
-        </div>
+        <div class="field center cert-note" contenteditable="true" id="ov-cert-note" data-key="cert-note"
+             style="left:19.7%;top:80.8%;width:71.2%;height:3.8%"></div>
+        <div class="field center" contenteditable="true" id="ov-cert-date" data-key="cert-date"
+             style="left:29.2%;top:84.9%;width:52.4%;height:2.1%"></div>
+        <div class="field center registry" contenteditable="true" id="ov-registry" data-key="registry"
+             style="left:24%;top:86.6%;width:35%;height:2.4%"></div>
+        <div class="field issuer" contenteditable="true" id="ov-issuer" data-key="issuer"
+             style="left:55%;top:87.8%;width:30%;height:2.8%"></div>
+
+        <!-- Two red registry seals from reference KYC certificate -->
+        <img class="seal" id="seal-left" src="./assets/seal-left.png" alt="登記印"
+             style="left:53%;top:84%;width:11%;height:7.8%" />
+        <img class="seal" id="seal-right" src="./assets/seal-right.png" alt="法務局印"
+             style="left:81.5%;top:84.1%;width:10.9%;height:7.8%" />
+
+        <div class="field serial" contenteditable="true" id="ov-serial" data-key="serial"
+             style="left:24.5%;top:93.2%;width:13%;height:2.2%"></div>
+        <div class="field page" contenteditable="true" id="ov-page" data-key="page"
+             style="left:83.5%;top:93.2%;width:9%;height:2.2%"></div>
       </section>
     </main>
   </div>
 
   <script>
-    const STORAGE_KEY = "baj-corporate-history-v3-html";
+    const STORAGE_KEY = "baj-corporate-history-v8-noto-sans-jp";
     const KEYS = [
-      "header-addr","header-org","corp-no","name","office","founded",
-      "purpose","officers","cert-note","cert-date","registry","issuer","serial","page"
+      "header-addr", "header-org", "corp-no", "name", "office", "founded",
+      "purpose", "officers", "cert-note", "cert-date", "registry", "issuer", "serial", "page"
     ];
     const defaults = {
       "header-addr": "東京都渋谷区本町三丁目48番21-303号",
@@ -371,10 +264,10 @@
       officers: "東京都渋谷区本町三丁目48番21-303号\n理事　中島 かおり\n東京都渋谷区本町三丁目48番21-303号\n理事　石川 治江\n東京都渋谷区本町三丁目48番21-303号\n理事　根本 悦子\n東京都渋谷区本町三丁目48番21-303号\n理事　Sejima Shunsuke",
       "cert-note": "これは登記簿に記録されている閉鎖されていない事項の全部であることを証明した書面である。\n（東京法務局渋谷出張所管轄）",
       "cert-date": "平成28年 4月13日",
-      registry: "東京法務局渋谷出張所",
+      registry: "東京法務局渋谷出張所\n登記官",
       issuer: "岡戸 嘉信",
       serial: "T344310",
-      page: "1 / 5"
+      page: "1  5"
     };
 
     const setStatus = (message, isError = false) => {
@@ -434,6 +327,7 @@
     document.getElementById("btn-pdf").addEventListener("click", async () => {
       try {
         setStatus("正在生成 PDF...");
+        await document.fonts.ready;
         const sheetElement = document.getElementById("sheet");
         const canvas = await html2canvas(sheetElement, {
           backgroundColor: "#ffffff",
@@ -451,7 +345,7 @@
           canvas.toDataURL("image/jpeg", 0.98),
           "JPEG",
           (pageWidth - imageWidth) / 2,
-          (pageHeight - imageHeight) / 2,
+          0,
           imageWidth,
           imageHeight
         );
@@ -470,40 +364,48 @@
       anchor.href = URL.createObjectURL(blob);
       anchor.download = "corporate-history.json";
       anchor.click();
+      URL.revokeObjectURL(anchor.href);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-      setStatus("JSON 已导出");
+      setStatus("JSON 已导出，并已缓存到本地");
     });
 
     document.getElementById("btn-load").addEventListener("click", () => {
-      const fileInput = document.createElement("input");
-      fileInput.type = "file";
-      fileInput.accept = ".json,application/json";
-      fileInput.addEventListener("change", () => {
-        const selectedFile = fileInput.files[0];
-        if (!selectedFile) return;
-        const reader = new FileReader();
-        reader.onload = () => {
-          setData(JSON.parse(reader.result));
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "application/json,.json";
+      input.addEventListener("change", async () => {
+        const file = input.files && input.files[0];
+        if (!file) return;
+        try {
+          const text = await file.text();
+          const data = JSON.parse(text);
+          setData(data);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
           setStatus("JSON 已读取");
-        };
-        reader.readAsText(selectedFile);
+        } catch (error) {
+          setStatus("读取失败: " + error.message, true);
+        }
       });
-      fileInput.click();
+      input.click();
     });
 
     document.getElementById("btn-reset").addEventListener("click", () => {
-      if (!confirm("重置为默认内容？")) return;
       setData(defaults);
-      setStatus("已重置");
+      localStorage.removeItem(STORAGE_KEY);
+      setStatus("已重置为默认值");
     });
 
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setData(JSON.parse(raw));
-      else syncToOverlay();
+      const cached = localStorage.getItem(STORAGE_KEY);
+      if (cached) setData(JSON.parse(cached));
+      else setData(defaults);
     } catch (error) {
-      syncToOverlay();
+      setData(defaults);
     }
+
+    window.addEventListener("beforeunload", () => {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(getData())); } catch (error) {}
+    });
   </script>
 </body>
 </html>
